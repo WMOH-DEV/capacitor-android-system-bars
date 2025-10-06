@@ -1,10 +1,10 @@
 import { registerPlugin } from '@capacitor/core';
 
-import type { SystemBarsManagerPlugin } from './definitions';
+import type { AndroidSystemBarsPlugin } from './definitions';
 
-const SystemBarsManager = registerPlugin<SystemBarsManagerPlugin>('SystemBarsManager', {
-  web: () => import('./web').then((m) => new m.SystemBarsManagerWeb()),
+const AndroidSystemBars = registerPlugin<AndroidSystemBarsPlugin>('AndroidSystemBars', {
+  web: () => import('./web').then((m) => new m.AndroidSystemBarsWeb()),
 });
 
 export * from './definitions';
-export { SystemBarsManager };
+export { AndroidSystemBars };

@@ -1,10 +1,13 @@
 {
-  "appId": "com.example.plugin",
-  "appName": "example-app",
+  "appId": "com.capacitor.androidsystembars.example",
+  "appName": "Android System Bars Example",
   "webDir": "dist",
   "plugins": {
     "SplashScreen": {
       "launchAutoHide": false
+    },
+    "Keyboard": {
+      "resizeOnFullScreen": false
     }
   }
 }

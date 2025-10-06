@@ -1,7 +1,7 @@
 {
-  "name": "android-system-bars",
-  "version": "0.0.1",
-  "description": "Edge to edge support",
+  "name": "capacitor-android-system-bars",
+  "version": "1.0.0",
+  "description": "Unified plugin to handle Android system bars (status bar & navigation bar), webview sizing, edge-to-edge display, and fullscreen mode with full compatibility for Android API 21-35+",
   "main": "dist/plugin.cjs.js",
   "module": "dist/esm/index.js",
   "types": "dist/esm/index.d.ts",
@@ -15,19 +15,28 @@
     "Package.swift",
     "AndroidSystemBars.podspec"
   ],
-  "author": "",
+  "author": "Wael M.Elsaid",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mesmotronic/cordova-plugin-fullscreen.git"
+    "url": "git+https://github.com/capacitor-community/android-system-bars.git"
   },
   "bugs": {
-    "url": "https://github.com/mesmotronic/cordova-plugin-fullscreen/issues"
+    "url": "https://github.com/capacitor-community/android-system-bars/issues"
   },
   "keywords": [
     "capacitor",
     "plugin",
-    "native"
+    "native",
+    "android",
+    "system-bars",
+    "status-bar",
+    "navigation-bar",
+    "edge-to-edge",
+    "fullscreen",
+    "immersive",
+    "android-15",
+    "api-35"
   ],
   "scripts": {
     "verify": "npm run verify:ios && npm run verify:android && npm run verify:web",
@@ -39,7 +48,7 @@
     "eslint": "eslint . --ext ts",
     "prettier": "prettier \"**/*.{css,html,ts,js,java}\" --plugin=prettier-plugin-java",
     "swiftlint": "node-swiftlint",
-    "docgen": "docgen --api SystemBarsManagerPlugin --output-readme README.md --output-json dist/docs.json",
+    "docgen": "docgen --api AndroidSystemBarsPlugin --output-readme README.md --output-json dist/docs.json",
     "build": "npm run clean && npm run docgen && tsc && rollup -c rollup.config.mjs",
     "clean": "rimraf ./dist",
     "watch": "tsc --watch",
