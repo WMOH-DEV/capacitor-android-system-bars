@@ -175,18 +175,18 @@ await AndroidSystemBars.setStyle({ style: 'DARK' });
 
 <docgen-index>
 
-- [`initialize()`](#initialize)
-- [`setStyle(...)`](#setstyle)
-- [`hide()`](#hide)
-- [`show()`](#show)
-- [`enterFullscreen(...)`](#enterfullscreen)
-- [`exitFullscreen(...)`](#exitfullscreen)
-- [`setOverlay(...)`](#setoverlay)
-- [`getInsets()`](#getinsets)
-- [`setNavigationBarStyle(...)`](#setnavigationbarstyle)
-- [`hideNavigationBar()`](#hidenavigationbar)
-- [`showNavigationBar()`](#shownavigationbar)
-- [Interfaces](#interfaces)
+* [`initialize()`](#initialize)
+* [`setStyle(...)`](#setstyle)
+* [`hide()`](#hide)
+* [`show()`](#show)
+* [`enterFullscreen(...)`](#enterfullscreen)
+* [`exitFullscreen(...)`](#exitfullscreen)
+* [`setOverlay(...)`](#setoverlay)
+* [`getInsets()`](#getinsets)
+* [`setNavigationBarStyle(...)`](#setnavigationbarstyle)
+* [`hideNavigationBar()`](#hidenavigationbar)
+* [`showNavigationBar()`](#shownavigationbar)
+* [Interfaces](#interfaces)
 
 </docgen-index>
 
@@ -203,7 +203,8 @@ Initialize plugin and get device info
 
 **Returns:** <code>Promise&lt;<a href="#initializeresult">InitializeResult</a>&gt;</code>
 
----
+--------------------
+
 
 ### setStyle(...)
 
@@ -217,7 +218,8 @@ Set status bar style and color
 | ------------- | ----------------------------------------------------------- |
 | **`options`** | <code><a href="#setstyleoptions">SetStyleOptions</a></code> |
 
----
+--------------------
+
 
 ### hide()
 
@@ -227,7 +229,8 @@ hide() => Promise<void>
 
 Hide status bar
 
----
+--------------------
+
 
 ### show()
 
@@ -237,7 +240,8 @@ show() => Promise<void>
 
 Show status bar
 
----
+--------------------
+
 
 ### enterFullscreen(...)
 
@@ -251,7 +255,8 @@ Enter fullscreen mode
 | ------------- | ------------------------------------------------------------------------- |
 | **`options`** | <code><a href="#enterfullscreenoptions">EnterFullscreenOptions</a></code> |
 
----
+--------------------
+
 
 ### exitFullscreen(...)
 
@@ -265,7 +270,8 @@ Exit fullscreen mode
 | ------------- | ----------------------------------------------------------------------- |
 | **`options`** | <code><a href="#exitfullscreenoptions">ExitFullscreenOptions</a></code> |
 
----
+--------------------
+
 
 ### setOverlay(...)
 
@@ -279,7 +285,8 @@ Set overlay mode (Android 35+ only)
 | ------------- | --------------------------------------------------------------- |
 | **`options`** | <code><a href="#setoverlayoptions">SetOverlayOptions</a></code> |
 
----
+--------------------
+
 
 ### getInsets()
 
@@ -291,7 +298,8 @@ Get current window insets information
 
 **Returns:** <code>Promise&lt;<a href="#insetsresult">InsetsResult</a>&gt;</code>
 
----
+--------------------
+
 
 ### setNavigationBarStyle(...)
 
@@ -305,7 +313,8 @@ Set navigation bar style and color
 | ------------- | ------------------------------------------------------------------------------------- |
 | **`options`** | <code><a href="#setnavigationbarstyleoptions">SetNavigationBarStyleOptions</a></code> |
 
----
+--------------------
+
 
 ### hideNavigationBar()
 
@@ -315,7 +324,8 @@ hideNavigationBar() => Promise<void>
 
 Hide navigation bar
 
----
+--------------------
+
 
 ### showNavigationBar()
 
@@ -325,9 +335,11 @@ showNavigationBar() => Promise<void>
 
 Show navigation bar
 
----
+--------------------
+
 
 ### Interfaces
+
 
 #### InitializeResult
 
@@ -340,6 +352,7 @@ Show navigation bar
 | **`statusBarHeight`**      | <code>number</code>  | Status bar height in pixels                   |
 | **`navigationBarHeight`**  | <code>number</code>  | Navigation bar height in pixels               |
 
+
 #### SetStyleOptions
 
 | Prop        | Type                                        | Description                                                    |
@@ -347,11 +360,13 @@ Show navigation bar
 | **`style`** | <code>'LIGHT' \| 'DARK' \| 'DEFAULT'</code> | Status bar style                                               |
 | **`color`** | <code>string</code>                         | Status bar background color (hex format: #RRGGBB or #AARRGGBB) |
 
+
 #### EnterFullscreenOptions
 
 | Prop       | Type                               | Description          |
 | ---------- | ---------------------------------- | -------------------- |
 | **`mode`** | <code>'IMMERSIVE' \| 'LEAN'</code> | Fullscreen mode type |
+
 
 #### ExitFullscreenOptions
 
@@ -360,11 +375,13 @@ Show navigation bar
 | **`style`** | <code>'LIGHT' \| 'DARK' \| 'DEFAULT'</code> | Status bar style to restore |
 | **`color`** | <code>string</code>                         | Status bar color to restore |
 
+
 #### SetOverlayOptions
 
 | Prop          | Type                 | Description                                       |
 | ------------- | -------------------- | ------------------------------------------------- |
 | **`overlay`** | <code>boolean</code> | Whether to enable overlay mode (Android 35+ only) |
+
 
 #### InsetsResult
 
@@ -376,6 +393,7 @@ Show navigation bar
 | **`right`**                | <code>number</code>  | Right inset                        |
 | **`statusBarVisible`**     | <code>boolean</code> | Whether status bar is visible      |
 | **`navigationBarVisible`** | <code>boolean</code> | Whether navigation bar is visible  |
+
 
 #### SetNavigationBarStyleOptions
 

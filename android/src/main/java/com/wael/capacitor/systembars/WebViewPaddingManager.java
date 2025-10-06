@@ -64,7 +64,10 @@ public class WebViewPaddingManager {
     public void applyPadding() {
         if (Build.VERSION.SDK_INT < 35) {
             webView.post(() -> {
+                // CRITICAL: Force layout update after padding change
                 webView.setPadding(0, statusBarHeight, 0, 0);
+                webView.requestLayout();
+                webView.invalidate();
             });
         }
     }
@@ -74,7 +77,10 @@ public class WebViewPaddingManager {
      */
     public void removePadding() {
         webView.post(() -> {
+            // CRITICAL: Force layout update after padding removal
             webView.setPadding(0, 0, 0, 0);
+            webView.requestLayout();
+            webView.invalidate();
         });
     }
 
@@ -83,7 +89,10 @@ public class WebViewPaddingManager {
      */
     public void setPadding(int top, int bottom) {
         webView.post(() -> {
+            // CRITICAL: Force layout update after padding change
             webView.setPadding(0, top, 0, bottom);
+            webView.requestLayout();
+            webView.invalidate();
         });
     }
 

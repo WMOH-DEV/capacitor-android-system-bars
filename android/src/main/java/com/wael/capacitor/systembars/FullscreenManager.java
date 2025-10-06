@@ -83,31 +83,55 @@ public class FullscreenManager {
         activity.runOnUiThread(() -> {
             View decorView = window.getDecorView();
 
-            if (Build.VERSION.SDK_INT >= 30) {
-                // Modern approach
+            if (Build.VERSION.SDK_INT >= 35) {
+                // Android 35+: Use modern WindowInsetsController
                 WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, decorView);
 
                 controller.show(WindowInsetsCompat.Type.systemBars());
-                controller.setSystemBarsBehavior(
-                        WindowInsetsControllerCompat.BEHAVIOR_DEFAULT);
+                controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_DEFAULT);
+
+                // Restore edge-to-edge mode
+                systemBarsManager.reapplySystemUI();
+
+            } else if (Build.VERSION.SDK_INT >= 30) {
+                // Android 30-34: Use WindowInsetsController but apply padding
+                WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, decorView);
+
+                controller.show(WindowInsetsCompat.Type.systemBars());
+                controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_DEFAULT);
+
+                // CRITICAL: Apply padding after system bars are shown
+                decorView.post(() -> {
+                    paddingManager.applyPadding();
+                });
+
             } else {
-                // Legacy - clear fullscreen flags
+                // Android < 30: Legacy System UI flags
                 int flags = decorView.getSystemUiVisibility();
+
+                // Clear all fullscreen flags
                 flags &= ~(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_FULLSCREEN
                         | View.SYSTEM_UI_FLAG_IMMERSIVE
-                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
+
+                // Restore stable layout flags
+                flags |= View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
 
                 decorView.setSystemUiVisibility(flags);
+
+                // CRITICAL: Apply padding after layout flags are set
+                decorView.post(() -> {
+                    paddingManager.applyPadding();
+                });
             }
 
-            // Restore status bar style and color
-            systemBarsManager.setStatusBarStyle(style, color);
-
-            // Restore webview padding on Android < 35
-            if (Build.VERSION.SDK_INT < 35) {
-                paddingManager.applyPadding();
-            }
+            // Restore status bar style and color with a slight delay
+            decorView.postDelayed(() -> {
+                systemBarsManager.setStatusBarStyle(style, color);
+            }, 50);
         });
     }
 }
