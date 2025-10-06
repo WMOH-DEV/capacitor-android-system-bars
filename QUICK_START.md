@@ -26,7 +26,7 @@ await AndroidSystemBars.setAdMobCompatibilityMode({ enabled: true });
 const isDark = document.body.classList.contains('dark');
 await AndroidSystemBars.setStyle({
   style: isDark ? 'DARK' : 'LIGHT',
-  color: isDark ? '#111827' : '#ffffff'
+  color: isDark ? '#111827' : '#ffffff',
 });
 
 // For Android 35+: Enable edge-to-edge
@@ -41,7 +41,7 @@ if (info.isAndroid35Plus) {
 // After ANY AdMob ad interaction:
 await AndroidSystemBars.restoreSystemUIAfterAd({
   style: 'LIGHT',
-  color: '#ffffff'
+  color: '#ffffff',
 });
 ```
 
@@ -57,7 +57,7 @@ await AndroidSystemBars.restoreSystemUIAfterAd({
 ✅ Fullscreen mode support  
 ✅ AdMob interference fixes  
 ✅ Edge-to-edge on Android 35+  
-✅ Zero configuration required  
+✅ Zero configuration required
 
 ## 🆚 Replaces
 

@@ -218,44 +218,6 @@ public class SystemBarsManagerPlugin extends Plugin {
         }
     }
 
-    /**
-     * ADMOB COMPATIBILITY METHODS
-     * These methods help restore system UI state after AdMob ads
-     * that use immersiveMode interfere with system bars
-     */
-
-    @PluginMethod
-    public void restoreSystemUIAfterAd(PluginCall call) {
-        String style = call.getString("style", "DEFAULT");
-        String color = call.getString("color");
-
-        try {
-            // Force restore system UI state after AdMob interference
-            systemBarsManager.forceRestoreSystemUI(style, color);
-
-            // Re-apply webview padding if needed
-            if (Build.VERSION.SDK_INT < 35) {
-                paddingManager.applyPadding();
-            }
-
-            call.resolve();
-        } catch (Exception e) {
-            call.reject("Failed to restore system UI after ad", e);
-        }
-    }
-
-    @PluginMethod
-    public void setAdMobCompatibilityMode(PluginCall call) {
-        boolean enabled = call.getBoolean("enabled", true);
-
-        try {
-            systemBarsManager.setAdMobCompatibilityMode(enabled);
-            call.resolve();
-        } catch (Exception e) {
-            call.reject("Failed to set AdMob compatibility mode", e);
-        }
-    }
-
     // Getter methods for lifecycle handler
     public SystemBarsManager getSystemBarsManager() {
         return systemBarsManager;
