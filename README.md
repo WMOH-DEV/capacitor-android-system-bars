@@ -186,9 +186,6 @@ await AndroidSystemBars.setStyle({ style: 'DARK' });
 * [`setNavigationBarStyle(...)`](#setnavigationbarstyle)
 * [`hideNavigationBar()`](#hidenavigationbar)
 * [`showNavigationBar()`](#shownavigationbar)
-* [`restoreSystemUIAfterAd(...)`](#restoresystemuiafterad)
-* [`setAdMobCompatibilityMode(...)`](#setadmobcompatibilitymode)
-* [`getSystemUIState()`](#getsystemuistate)
 * [Interfaces](#interfaces)
 
 </docgen-index>
@@ -341,52 +338,6 @@ Show navigation bar
 --------------------
 
 
-### restoreSystemUIAfterAd(...)
-
-```typescript
-restoreSystemUIAfterAd(options: RestoreSystemUIOptions) => Promise<void>
-```
-
-Restore system UI state after AdMob ad interference
-Call this after AdMob ads to fix system bar issues
-
-| Param         | Type                                                                      |
-| ------------- | ------------------------------------------------------------------------- |
-| **`options`** | <code><a href="#restoresystemuioptions">RestoreSystemUIOptions</a></code> |
-
---------------------
-
-
-### setAdMobCompatibilityMode(...)
-
-```typescript
-setAdMobCompatibilityMode(options: SetAdMobCompatibilityOptions) => Promise<AdMobCompatibilityResult>
-```
-
-Enable/disable AdMob compatibility mode
-
-| Param         | Type                                                                                  |
-| ------------- | ------------------------------------------------------------------------------------- |
-| **`options`** | <code><a href="#setadmobcompatibilityoptions">SetAdMobCompatibilityOptions</a></code> |
-
-**Returns:** <code>Promise&lt;<a href="#admobcompatibilityresult">AdMobCompatibilityResult</a>&gt;</code>
-
---------------------
-
-
-### getSystemUIState()
-
-```typescript
-getSystemUIState() => Promise<SystemUIStateResult>
-```
-
-Get current system UI state (for debugging)
-
-**Returns:** <code>Promise&lt;<a href="#systemuistateresult">SystemUIStateResult</a>&gt;</code>
-
---------------------
-
-
 ### Interfaces
 
 
@@ -450,38 +401,6 @@ Get current system UI state (for debugging)
 | ----------- | ------------------------------------------- | ------------------------------------------------------------------ |
 | **`style`** | <code>'LIGHT' \| 'DARK' \| 'DEFAULT'</code> | Navigation bar style                                               |
 | **`color`** | <code>string</code>                         | Navigation bar background color (hex format: #RRGGBB or #AARRGGBB) |
-
-
-#### RestoreSystemUIOptions
-
-| Prop        | Type                                        | Description                 |
-| ----------- | ------------------------------------------- | --------------------------- |
-| **`style`** | <code>'LIGHT' \| 'DARK' \| 'DEFAULT'</code> | Status bar style to restore |
-| **`color`** | <code>string</code>                         | Status bar color to restore |
-
-
-#### AdMobCompatibilityResult
-
-| Prop          | Type                 | Description                                 |
-| ------------- | -------------------- | ------------------------------------------- |
-| **`enabled`** | <code>boolean</code> | Whether AdMob compatibility mode is enabled |
-
-
-#### SetAdMobCompatibilityOptions
-
-| Prop          | Type                 | Description                                |
-| ------------- | -------------------- | ------------------------------------------ |
-| **`enabled`** | <code>boolean</code> | Whether to enable AdMob compatibility mode |
-
-
-#### SystemUIStateResult
-
-| Prop                         | Type                 | Description                                 |
-| ---------------------------- | -------------------- | ------------------------------------------- |
-| **`lastStyle`**              | <code>string</code>  | Last applied status bar style               |
-| **`lastColor`**              | <code>string</code>  | Last applied status bar color               |
-| **`apiLevel`**               | <code>number</code>  | Android API level                           |
-| **`adMobCompatibilityMode`** | <code>boolean</code> | Whether AdMob compatibility mode is enabled |
 
 </docgen-api>
 

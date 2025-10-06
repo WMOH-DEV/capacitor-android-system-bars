@@ -9,10 +9,6 @@ import type {
   SetOverlayOptions,
   InsetsResult,
   SetNavigationBarStyleOptions,
-  RestoreSystemUIOptions,
-  SetAdMobCompatibilityOptions,
-  AdMobCompatibilityResult,
-  SystemUIStateResult,
 } from './definitions';
 
 export class AndroidSystemBarsWeb extends WebPlugin implements AndroidSystemBarsPlugin {
@@ -97,27 +93,5 @@ export class AndroidSystemBarsWeb extends WebPlugin implements AndroidSystemBars
   async showNavigationBar(): Promise<void> {
     // Not supported on web
     throw this.unimplemented('Not implemented on web.');
-  }
-
-  async restoreSystemUIAfterAd(options: RestoreSystemUIOptions): Promise<void> {
-    console.log('restoreSystemUIAfterAd', options);
-    // Not needed on web - AdMob doesn't interfere with web browsers
-    return Promise.resolve();
-  }
-
-  async setAdMobCompatibilityMode(options: SetAdMobCompatibilityOptions): Promise<AdMobCompatibilityResult> {
-    console.log('setAdMobCompatibilityMode', options);
-    // Not needed on web
-    return Promise.resolve({ enabled: false });
-  }
-
-  async getSystemUIState(): Promise<SystemUIStateResult> {
-    // Return default values for web
-    return Promise.resolve({
-      lastStyle: 'DEFAULT',
-      lastColor: undefined,
-      apiLevel: 0,
-      adMobCompatibilityMode: false,
-    });
   }
 }

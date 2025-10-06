@@ -121,60 +121,6 @@ public class SystemBarsManagerPlugin extends Plugin {
         }
     }
 
-    /**
-     * ADMOB COMPATIBILITY METHODS
-     * These methods help fix AdMob interference with system bars
-     */
-
-    @PluginMethod
-    public void restoreSystemUIAfterAd(PluginCall call) {
-        String style = call.getString("style", "DEFAULT");
-        String color = call.getString("color");
-
-        try {
-            systemBarsManager.forceRestoreSystemUI(style, color);
-
-            // Force re-apply webview padding on Android < 35
-            if (Build.VERSION.SDK_INT < 35) {
-                paddingManager.applyPadding();
-            }
-
-            call.resolve();
-        } catch (Exception e) {
-            call.reject("Failed to restore system UI after ad", e);
-        }
-    }
-
-    @PluginMethod
-    public void setAdMobCompatibilityMode(PluginCall call) {
-        boolean enabled = call.getBoolean("enabled", true);
-
-        try {
-            systemBarsManager.setAdMobCompatibilityMode(enabled);
-
-            JSObject result = new JSObject();
-            result.put("enabled", enabled);
-            call.resolve(result);
-        } catch (Exception e) {
-            call.reject("Failed to set AdMob compatibility mode", e);
-        }
-    }
-
-    @PluginMethod
-    public void getSystemUIState(PluginCall call) {
-        try {
-            JSObject result = new JSObject();
-            result.put("lastStyle", systemBarsManager.getLastStatusBarStyle());
-            result.put("lastColor", systemBarsManager.getLastStatusBarColor());
-            result.put("apiLevel", Build.VERSION.SDK_INT);
-            result.put("adMobCompatibilityMode", true); // Always enabled by default
-
-            call.resolve(result);
-        } catch (Exception e) {
-            call.reject("Failed to get system UI state", e);
-        }
-    }
-
     @PluginMethod
     public void getInsets(PluginCall call) {
         try {

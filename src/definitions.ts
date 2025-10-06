@@ -53,22 +53,6 @@ export interface AndroidSystemBarsPlugin {
    * Show navigation bar
    */
   showNavigationBar(): Promise<void>;
-
-  /**
-   * Restore system UI state after AdMob ad interference
-   * Call this after AdMob ads to fix system bar issues
-   */
-  restoreSystemUIAfterAd(options: RestoreSystemUIOptions): Promise<void>;
-
-  /**
-   * Enable/disable AdMob compatibility mode
-   */
-  setAdMobCompatibilityMode(options: SetAdMobCompatibilityOptions): Promise<AdMobCompatibilityResult>;
-
-  /**
-   * Get current system UI state (for debugging)
-   */
-  getSystemUIState(): Promise<SystemUIStateResult>;
 }
 
 export interface InitializeResult {
@@ -185,50 +169,4 @@ export interface SetNavigationBarStyleOptions {
   color?: string;
 }
 
-export interface RestoreSystemUIOptions {
-  /**
-   * Status bar style to restore
-   */
-  style: 'LIGHT' | 'DARK' | 'DEFAULT';
 
-  /**
-   * Status bar color to restore
-   */
-  color?: string;
-}
-
-export interface SetAdMobCompatibilityOptions {
-  /**
-   * Whether to enable AdMob compatibility mode
-   */
-  enabled: boolean;
-}
-
-export interface AdMobCompatibilityResult {
-  /**
-   * Whether AdMob compatibility mode is enabled
-   */
-  enabled: boolean;
-}
-
-export interface SystemUIStateResult {
-  /**
-   * Last applied status bar style
-   */
-  lastStyle: string;
-
-  /**
-   * Last applied status bar color
-   */
-  lastColor?: string;
-
-  /**
-   * Android API level
-   */
-  apiLevel: number;
-
-  /**
-   * Whether AdMob compatibility mode is enabled
-   */
-  adMobCompatibilityMode: boolean;
-}
