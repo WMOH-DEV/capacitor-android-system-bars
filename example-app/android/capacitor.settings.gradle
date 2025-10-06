@@ -2,5 +2,5 @@
 include ':capacitor-android'
 project(':capacitor-android').projectDir = new File('../node_modules/@capacitor/android/capacitor')
 
-include ':android-system-bars'
-project(':android-system-bars').projectDir = new File('../../android')
+include ':capacitor-android-system-bars'
+project(':capacitor-android-system-bars').projectDir = new File('../../android')
