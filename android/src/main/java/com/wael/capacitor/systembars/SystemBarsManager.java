@@ -261,4 +261,85 @@ public class SystemBarsManager {
             }
         });
     }
+
+    /**
+     * ADMOB COMPATIBILITY METHODS
+     * AdMob's immersiveMode uses SYSTEM_UI_FLAG_IMMERSIVE_STICKY &
+     * SYSTEM_UI_FLAG_HIDE_NAVIGATION
+     * which interferes with our system bar management. These methods help restore
+     * proper state.
+     */
+
+    private boolean adMobCompatibilityMode = true;
+    private String lastStatusBarStyle = "DEFAULT";
+    private String lastStatusBarColor = null;
+
+    /**
+     * Force restore system UI state after AdMob ad interference
+     * This method aggressively clears AdMob's immersive flags and restores our
+     * state
+     */
+    public void forceRestoreSystemUI(String style, String color) {
+        activity.runOnUiThread(() -> {
+            View decorView = window.getDecorView();
+
+            if (Build.VERSION.SDK_INT >= 35) {
+                // Android 35+: Use modern approach
+                enableEdgeToEdge();
+
+            } else if (Build.VERSION.SDK_INT >= 30) {
+                // Android 30-34: Clear AdMob flags and restore
+                insetsController.show(WindowInsetsCompat.Type.systemBars());
+                insetsController.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_DEFAULT);
+
+            } else {
+                // Android < 30: Aggressively clear ALL AdMob immersive flags
+                int flags = decorView.getSystemUiVisibility();
+
+                // CRITICAL: Clear ALL AdMob-set immersive flags
+                flags &= ~(View.SYSTEM_UI_FLAG_IMMERSIVE
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+
+                // Restore our stable layout
+                flags |= View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
+
+                decorView.setSystemUiVisibility(flags);
+            }
+
+            // Store current style for future restoration
+            lastStatusBarStyle = style;
+            lastStatusBarColor = color;
+
+            // Restore status bar style after clearing AdMob flags
+            decorView.postDelayed(() -> {
+                setStatusBarStyle(style, color);
+            }, 100); // Longer delay for AdMob cleanup
+        });
+    }
+
+    /**
+     * Enable/disable AdMob compatibility mode
+     * When enabled, the plugin will more aggressively restore system UI state
+     */
+    public void setAdMobCompatibilityMode(boolean enabled) {
+        this.adMobCompatibilityMode = enabled;
+    }
+
+    /**
+     * Get the last applied status bar style (for AdMob restoration)
+     */
+    public String getLastStatusBarStyle() {
+        return lastStatusBarStyle;
+    }
+
+    /**
+     * Get the last applied status bar color (for AdMob restoration)
+     */
+    public String getLastStatusBarColor() {
+        return lastStatusBarColor;
+    }
 }

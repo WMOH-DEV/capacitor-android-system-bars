@@ -8,13 +8,17 @@ class SystemBarsExample {
 
     async initialize() {
         try {
+            // Initialize the plugin
             this.deviceInfo = await AndroidSystemBars.initialize();
             console.log('📱 Device Info:', this.deviceInfo);
+
+            // Enable AdMob compatibility mode
+            await AndroidSystemBars.setAdMobCompatibilityMode({ enabled: true });
 
             this.isInitialized = true;
             this.updateUI();
 
-            // Set initial style
+            // Set initial style with edge-to-edge support
             await this.setTheme('light');
 
         } catch (error) {
@@ -110,6 +114,33 @@ class SystemBarsExample {
         }
     }
 
+    // NEW: AdMob Integration Example
+    async testAdMobCompatibility() {
+        if (!this.isInitialized) return;
+
+        try {
+            // Simulate AdMob ad interaction
+            this.logToUI('Simulating AdMob ad interference...');
+
+            // Get current system UI state
+            const state = await AndroidSystemBars.getSystemUIState();
+            console.log('📊 System UI State:', state);
+            this.logToUI(`Current Style: ${state.lastStyle}, API: ${state.apiLevel}`);
+
+            // Simulate AdMob restoring system UI
+            await AndroidSystemBars.restoreSystemUIAfterAd({
+                style: 'LIGHT',
+                color: '#ffffff'
+            });
+
+            console.log('✅ AdMob compatibility test completed');
+            this.logToUI('AdMob compatibility test completed - system UI restored');
+        } catch (error) {
+            console.error('❌ AdMob compatibility test failed:', error);
+            this.logToUI(`AdMob test failed: ${error.message}`);
+        }
+    }
+
     updateUI() {
         if (this.deviceInfo) {
             document.getElementById('api-level').innerText = this.deviceInfo.apiLevel.toString();
@@ -144,4 +175,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.exitFullscreen = () => systemBars.exitFullscreen();
     window.toggleStatusBar = () => systemBars.toggleStatusBar();
     window.testEdgeToEdge = () => systemBars.testEdgeToEdge();
+    window.testAdMobCompatibility = () => systemBars.testAdMobCompatibility();
 });
