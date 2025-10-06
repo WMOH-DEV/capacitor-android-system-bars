@@ -1,4 +1,4 @@
-# @capacitor-community/android-system-bars
+# capacitor-android-system-bars
 
 Unified plugin to handle Android system bars (status bar & navigation bar), webview sizing, edge-to-edge display, and fullscreen mode with full compatibility for Android API 21-35+.
 
@@ -21,7 +21,7 @@ Unified plugin to handle Android system bars (status bar & navigation bar), webv
 ## Install
 
 ```bash
-npm install @capacitor-community/android-system-bars
+npm install capacitor-android-system-bars
 npx cap sync
 ```
 
@@ -61,7 +61,7 @@ export default config;
 ### Initialize the Plugin
 
 ```typescript
-import { AndroidSystemBars } from '@capacitor-community/android-system-bars';
+import { AndroidSystemBars } from 'capacitor-android-system-bars';
 
 export class AppComponent {
   async ngOnInit() {
@@ -97,7 +97,7 @@ export class AppComponent {
 
 ```typescript
 // theme.service.ts
-import { AndroidSystemBars } from '@capacitor-community/android-system-bars';
+import { AndroidSystemBars } from 'capacitor-android-system-bars';
 
 export class ThemeService {
   async toggleTheme() {
@@ -115,7 +115,7 @@ export class ThemeService {
 ### Fullscreen Mode
 
 ```typescript
-import { AndroidSystemBars } from '@capacitor-community/android-system-bars';
+import { AndroidSystemBars } from 'capacitor-android-system-bars';
 
 export class FullscreenService {
   async enterFullscreen() {
@@ -152,7 +152,7 @@ import { EdgeToEdge } from '@capawesome/capacitor-android-edge-to-edge-support';
 await EdgeToEdge.enable();
 
 // After
-import { AndroidSystemBars } from '@capacitor-community/android-system-bars';
+import { AndroidSystemBars } from 'capacitor-android-system-bars';
 const info = await AndroidSystemBars.initialize();
 if (info.isAndroid35Plus) {
   await AndroidSystemBars.setOverlay({ overlay: true });
@@ -167,7 +167,7 @@ import { StatusBar, Style } from '@capacitor/status-bar';
 await StatusBar.setStyle({ style: Style.Dark });
 
 // After
-import { AndroidSystemBars } from '@capacitor-community/android-system-bars';
+import { AndroidSystemBars } from 'capacitor-android-system-bars';
 await AndroidSystemBars.setStyle({ style: 'DARK' });
 ```
 
@@ -412,4 +412,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ## License
 
-MIT © [Capacitor Community](https://github.com/capacitor-community)
+MIT © [Wael M.Elsaid](https://github.com/WMOH-DEV)

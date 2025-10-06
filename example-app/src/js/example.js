@@ -1,4 +1,4 @@
-import { AndroidSystemBars } from '@capacitor-community/android-system-bars';
+import { AndroidSystemBars } from 'capacitor-android-system-bars';
 
 class SystemBarsExample {
     constructor() {

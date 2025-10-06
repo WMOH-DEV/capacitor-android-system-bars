@@ -681,14 +681,14 @@ npm uninstall @capawesome/capacitor-android-edge-to-edge-support @capacitor/stat
 **Install custom plugin:**
 
 ```bash
-npm install @capacitor-community/android-system-bars
+npm install capacitor-android-system-bars
 npx cap sync
 ```
 
 **app.component.ts**
 
 ```typescript
-import { AndroidSystemBars } from '@capacitor-community/android-system-bars';
+import { AndroidSystemBars } from 'capacitor-android-system-bars';
 
 async initEdgeToEdge() {
   try {
@@ -717,7 +717,7 @@ async initEdgeToEdge() {
 **full-screen.service.ts**
 
 ```typescript
-import { AndroidSystemBars } from '@capacitor-community/android-system-bars';
+import { AndroidSystemBars } from 'capacitor-android-system-bars';
 
 async enter() {
   await AndroidSystemBars.enterFullscreen({ mode: 'IMMERSIVE' });
@@ -857,7 +857,7 @@ android.enableJetifier=true
 3. **Install custom plugin**
 
    ```bash
-   npm install @capacitor-community/android-system-bars
+   npm install capacitor-android-system-bars
    ```
 
 4. **Update app code**

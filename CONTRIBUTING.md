@@ -16,7 +16,7 @@ Thank you for your interest in contributing to the Android System Bars plugin! T
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/capacitor-community/android-system-bars.git
+   git clone https://github.com/WMOH-DEV/capacitor-android-system-bars.git
    cd android-system-bars
    ```
 
