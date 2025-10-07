@@ -2,6 +2,44 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2024-12-28
+
+### Added
+
+- **Unified System Bars API**: New `setSystemBarsStyle()` method to handle both status and navigation bars in a single call with flexible configuration options
+- **Enhanced Fullscreen Management**: New `isFullscreenActive()` and `forceExitFullscreen()` methods for better fullscreen state control
+- **Clear Method Naming**: Added specific methods like `setStatusBarStyle()`, `hideStatusBar()`, and `showStatusBar()` for unambiguous API usage
+- **Professional Fullscreen Exit**: Enhanced `exitFullscreen()` method with explicit restoration configurations for both system bars
+- **New API Demo**: Added demonstration method in example app to showcase new API capabilities
+
+### Enhanced
+
+- **API Design**: Complete redesign for improved clarity and functionality with backward compatibility
+- **TypeScript Definitions**: Updated interface with new methods and improved type safety
+- **Example App**: Enhanced with new demo button and comprehensive API testing scenarios
+- **Documentation**: Updated README and created NEW_API_DESIGN.md with migration guide
+- **Plugin Implementation**: Native Android code updated to support new unified API methods
+
+### Changed
+
+- **Method Naming**: Replaced ambiguous method names with specific, clear alternatives
+- **Fullscreen Exit**: Now supports structured restoration configuration instead of simple parameters
+- **API Structure**: Unified approach for system bars control while maintaining individual bar access
+
+### Deprecated
+
+- **Legacy Methods**: `setStyle()`, `hide()`, and `show()` methods marked as deprecated with clear migration path
+- **Old Fullscreen Exit**: Simple parameter-based exit fullscreen deprecated in favor of structured restoration
+
+### Technical
+
+- **Backward Compatibility**: All existing code continues to work with deprecation warnings
+- **Unified Configuration**: Single method call can now set both status and navigation bars
+- **Flexible Options**: Support for shorthand (same style/color for both bars) and individual bar control
+- **State Management**: Enhanced fullscreen state tracking and emergency recovery mechanisms
+
+---
+
 ## [1.1.0] - 2024-12-19
 
 ### Added
