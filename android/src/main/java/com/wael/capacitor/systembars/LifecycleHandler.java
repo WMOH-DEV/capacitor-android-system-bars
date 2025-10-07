@@ -34,13 +34,21 @@ public class LifecycleHandler {
         if (isAppInBackground) {
             isAppInBackground = false;
 
-            // CRITICAL: Re-apply system UI state after resume
-            // This fixes the issue where screen unlock resets overlay mode
-            plugin.getSystemBarsManager().reapplySystemUI();
+            // Get fullscreen manager from plugin
+            FullscreenManager fullscreenManager = plugin.getFullscreenManager();
 
-            // Re-apply webview padding on Android < 35
-            if (Build.VERSION.SDK_INT < 35) {
-                plugin.getPaddingManager().applyPadding();
+            // CRITICAL: Check if fullscreen mode is active
+            if (fullscreenManager.isFullscreenActive()) {
+                // Re-apply fullscreen mode (system events reset it)
+                fullscreenManager.reapplyFullscreenIfActive();
+            } else {
+                // Normal mode: Re-apply system UI state
+                plugin.getSystemBarsManager().reapplySystemUI();
+
+                // Re-apply webview padding on Android < 35
+                if (Build.VERSION.SDK_INT < 35) {
+                    plugin.getPaddingManager().applyPadding();
+                }
             }
         }
     }

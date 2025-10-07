@@ -372,6 +372,10 @@ public class SystemBarsManagerPlugin extends Plugin {
         return paddingManager;
     }
 
+    public FullscreenManager getFullscreenManager() {
+        return fullscreenManager;
+    }
+
     @Override
     protected void handleOnPause() {
         super.handleOnPause();
