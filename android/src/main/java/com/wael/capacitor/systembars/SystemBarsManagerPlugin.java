@@ -173,7 +173,7 @@ public class SystemBarsManagerPlugin extends Plugin {
 
     @PluginMethod
     public void setOverlay(PluginCall call) {
-        boolean overlay = call.getBoolean("overlay", false);
+        boolean overlay = Boolean.TRUE.equals(call.getBoolean("overlay", false));
 
         try {
             if (Build.VERSION.SDK_INT >= 35) {
@@ -245,6 +245,7 @@ public class SystemBarsManagerPlugin extends Plugin {
             JSObject statusBarConfig = null;
             JSObject navigationBarConfig = null;
 
+            assert options != null;
             if (options.has("statusBar")) {
                 try {
                     statusBarConfig = options.getJSObject("statusBar");
