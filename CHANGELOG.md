@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.2] - 2024-12-28
+
+### Fixed
+
+- **Null Safety**: Fixed null pointer handling in `setOverlay()` method to prevent crashes when options parameter is null
+- **Type Safety**: Improved null checking in `setSystemBarsStyle()` method for better robustness
+
+### Enhanced
+
+- **Documentation**: Streamlined README for improved clarity and usability with better examples and migration guidance
+- **API Documentation**: Enhanced method descriptions and usage examples in README
+
+---
+
 ## [1.2.0] - 2024-12-28
 
 ### Added
