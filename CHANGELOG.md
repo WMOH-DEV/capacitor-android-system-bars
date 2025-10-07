@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.3] - 2025-10-07
+
+### Fixed
+
+- **Fullscreen Mode Lifecycle**: Fixed critical issue where system bars would reappear after screen lock/unlock or app backgrounding while in fullscreen mode
+  - Added fullscreen state tracking to persist across lifecycle events
+  - Implemented `reapplyFullscreenIfActive()` method to restore fullscreen after resume
+  - System bars now remain hidden through screen lock, app switch, and phone call interruptions
+  - Mode preservation (IMMERSIVE/LEAN) maintained across all lifecycle events
+
+### Enhanced
+
+- **LifecycleHandler**: Improved `onResume()` logic to check fullscreen state before re-applying system UI
+- **FullscreenManager**: Added `currentFullscreenMode` tracking and `getCurrentFullscreenMode()` getter
+- **State Management**: Enhanced fullscreen state persistence across Android API 21-35+
+
+### Technical
+
+- Updated `FullscreenManager.java` with state tracking and re-application logic
+- Enhanced `LifecycleHandler.java` with conditional system UI restoration
+- Added `getFullscreenManager()` getter to `SystemBarsManagerPlugin.java`
+- Created comprehensive documentation: `FULLSCREEN_LIFECYCLE_FIX.md`, `FULLSCREEN_FLOW.md`, `FULLSCREEN_TEST_GUIDE.md`
+
+---
+
 ## [1.2.2] - 2024-12-28
 
 ### Fixed
