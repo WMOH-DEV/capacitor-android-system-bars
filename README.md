@@ -12,9 +12,10 @@ Unified plugin to handle Android system bars (status bar & navigation bar), webv
 
 - ✅ **Android API 21-35+ Compatibility** - Full support from Android 5.0 to Android 15+
 - ✅ **Edge-to-Edge Display** - Native Android 15+ edge-to-edge with backward compatibility
+- ✅ **Unified System Bars API** - Single method to control both status and navigation bars
 - ✅ **Status Bar Control** - Color, styling, and visibility management
 - ✅ **Navigation Bar Control** - Background color and icon styling (with Android 15+ deprecation handling)
-- ✅ **Fullscreen Mode** - Immersive and lean fullscreen modes
+- ✅ **Fullscreen Mode** - Immersive and lean fullscreen modes with professional state management
 - ✅ **WebView Padding** - Automatic webview padding management for Android < 35
 - ✅ **Lifecycle Handling** - Automatic state restoration after screen lock/unlock
 - ✅ **Modern APIs** - Uses latest WindowInsetsController with proper deprecation handling
@@ -81,9 +82,9 @@ export class AppComponent {
         await AndroidSystemBars.setOverlay({ overlay: true });
       }
 
-      // Set status bar style
+      // Set both status and navigation bars in ONE call!
       const isDark = document.body.classList.contains('dark');
-      await AndroidSystemBars.setStyle({
+      await AndroidSystemBars.setSystemBarsStyle({
         style: isDark ? 'DARK' : 'LIGHT',
         color: isDark ? '#111827' : '#f5efef',
       });
@@ -104,8 +105,8 @@ export class ThemeService {
   async toggleTheme() {
     const isDark = document.body.classList.toggle('dark');
 
-    // Update system bars to match theme
-    await AndroidSystemBars.setStyle({
+    // Update BOTH system bars in ONE call!
+    await AndroidSystemBars.setSystemBarsStyle({
       style: isDark ? 'DARK' : 'LIGHT',
       color: isDark ? '#111827' : '#ffffff',
     });
@@ -131,6 +132,8 @@ export class NavigationBarService {
 }
 ```
 
+> **💡 Pro Tip:** For most use cases, use `setSystemBarsStyle()` to control both bars in one call instead of individual methods.
+
 > **⚠️ Android 15+ Notice:** Navigation bar color control is deprecated in Android 15+. The navigation bar is automatically transparent and apps should design for edge-to-edge layouts. See [NAVIGATION_BAR_USAGE.md](./NAVIGATION_BAR_USAGE.md) for detailed migration guide.
 
 ### Fullscreen Mode
@@ -145,13 +148,56 @@ export class FullscreenService {
 
   async exitFullscreen() {
     const isDark = document.body.classList.contains('dark');
+    
+    // Exit fullscreen with explicit restoration configuration
     await AndroidSystemBars.exitFullscreen({
-      style: isDark ? 'DARK' : 'LIGHT',
-      color: isDark ? '#111827' : '#ffffff',
+      restore: {
+        style: isDark ? 'DARK' : 'LIGHT',
+        color: isDark ? '#111827' : '#ffffff',
+      },
+    });
+  }
+
+  async checkFullscreenStatus() {
+    const { active } = await AndroidSystemBars.isFullscreenActive();
+    return active;
+  }
+
+  async forceExitFullscreen() {
+    // Emergency exit if normal exit fails
+    await AndroidSystemBars.forceExitFullscreen();
+  }
+}
+```
+
+### Unified System Bars API (Recommended)
+
+For most use cases, use the new `setSystemBarsStyle()` method to control both status and navigation bars in a single call:
+
+```typescript
+import { AndroidSystemBars } from 'capacitor-android-system-bars';
+
+export class ThemeService {
+  async setAppTheme(theme: 'light' | 'dark') {
+    const config = theme === 'dark' 
+      ? { style: 'DARK' as const, color: '#111827' }
+      : { style: 'LIGHT' as const, color: '#ffffff' };
+
+    // One call sets both status AND navigation bars!
+    await AndroidSystemBars.setSystemBarsStyle(config);
+  }
+
+  async setCustomTheme() {
+    // Different styles for each bar
+    await AndroidSystemBars.setSystemBarsStyle({
+      statusBar: { style: 'LIGHT', color: '#ffffff' },
+      navigationBar: { style: 'DARK', color: '#000000' },
     });
   }
 }
 ```
+
+> **🎯 Best Practice:** Use `setSystemBarsStyle()` for theme changes and `setStatusBarStyle()`/`setNavigationBarStyle()` for individual bar control.
 
 ## API Compatibility Matrix
 
@@ -164,6 +210,66 @@ export class FullscreenService {
 | 5.0-8.0         | 21-26     | ❌ No        | ✅ Primary      | ❌ No            | Legacy System UI flags        |
 
 ## Migration Guide
+
+### From v1.2.0 (API Redesign)
+
+The API has been redesigned for improved clarity and reduced code complexity. All old methods are still supported with deprecation warnings.
+
+#### Theme Changes (2 calls → 1 call)
+
+**Before:**
+```typescript
+// Required TWO separate calls
+await AndroidSystemBars.setStyle({ style: 'DARK', color: '#111827' });
+await AndroidSystemBars.setNavigationBarStyle({ style: 'DARK', color: '#111827' });
+```
+
+**After:**
+```typescript
+// ONE call for both bars!
+await AndroidSystemBars.setSystemBarsStyle({
+  style: 'DARK',
+  color: '#111827',
+});
+```
+
+#### Fullscreen Exit (Confusing → Clear)
+
+**Before:**
+```typescript
+// Confusing: what do these parameters apply to?
+await AndroidSystemBars.exitFullscreen({
+  style: 'LIGHT',
+  color: '#ffffff',
+});
+```
+
+**After:**
+```typescript
+// Crystal clear restoration intent
+await AndroidSystemBars.exitFullscreen({
+  restore: {
+    style: 'LIGHT', // Clearly applies to both bars
+    color: '#ffffff', // Clearly applies to both bars
+  },
+});
+```
+
+#### Method Naming (Ambiguous → Specific)
+
+**Before:**
+```typescript
+await AndroidSystemBars.setStyle({ style: 'DARK' }); // What bar?
+await AndroidSystemBars.hide(); // Hide what?
+await AndroidSystemBars.show(); // Show what?
+```
+
+**After:**
+```typescript
+await AndroidSystemBars.setStatusBarStyle({ style: 'DARK' }); // Clear!
+await AndroidSystemBars.hideStatusBar(); // Clear!
+await AndroidSystemBars.showStatusBar(); // Clear!
+```
 
 ### From @capawesome/capacitor-android-edge-to-edge-support
 
@@ -187,10 +293,15 @@ if (info.isAndroid35Plus) {
 import { StatusBar, Style } from '@capacitor/status-bar';
 await StatusBar.setStyle({ style: Style.Dark });
 
-// After
+// After (v1.2.0+)
 import { AndroidSystemBars } from 'capacitor-android-system-bars';
-await AndroidSystemBars.setStyle({ style: 'DARK' });
+await AndroidSystemBars.setSystemBarsStyle({ style: 'DARK' }); // Sets both bars!
+
+// Or for status bar only
+await AndroidSystemBars.setStatusBarStyle({ style: 'DARK' });
 ```
+
+> **📖 For detailed migration examples and the complete new API guide, see [NEW_API_DESIGN.md](./NEW_API_DESIGN.md)**
 
 ## API
 
@@ -530,6 +641,10 @@ show() => Promise<void>
 4. **AdMob banner issues**
    - Plugin coordinates with system bar state changes
    - No additional configuration needed
+
+5. **Using deprecated methods**
+   - Old methods like `setStyle()`, `hide()`, `show()` still work but show deprecation warnings
+   - Migrate to new unified API (`setSystemBarsStyle()`, `hideStatusBar()`, `showStatusBar()`) for better clarity
 
 ## Contributing
 
