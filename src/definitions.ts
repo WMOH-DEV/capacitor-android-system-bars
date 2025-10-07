@@ -168,5 +168,3 @@ export interface SetNavigationBarStyleOptions {
    */
   color?: string;
 }
-
-

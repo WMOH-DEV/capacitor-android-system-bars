@@ -87,16 +87,42 @@ public class SystemBarsManager {
 
     /**
      * Set status bar style and color
+     * 
+     * Android 35+: setStatusBarColor() is deprecated - status bar is automatically
+     * transparent
+     * Android < 35: Use setStatusBarColor() with WindowInsetsControllerCompat for
+     * icon styling
      */
     public void setStatusBarStyle(String style, String color) {
         activity.runOnUiThread(() -> {
             boolean lightIcons = style.equals("DARK"); // Dark style = light icons
 
-            if (Build.VERSION.SDK_INT >= 30) {
-                // Modern approach using WindowInsetsController
+            if (Build.VERSION.SDK_INT >= 35) {
+                // Android 15+: Status bar color is automatically transparent and cannot be
+                // changed
+                // Only control icon styling - the system handles background based on
+                // WindowInsets
+                if (Build.VERSION.SDK_INT >= 30) {
+                    insetsController.setAppearanceLightStatusBars(!lightIcons);
+                }
+                // Note: For Android 35+, apps should draw proper background behind
+                // WindowInsets.Type.statusBars() instead of setting window colors
+
+            } else if (Build.VERSION.SDK_INT >= 30) {
+                // Android 11-14: Modern approach using WindowInsetsController
                 insetsController.setAppearanceLightStatusBars(!lightIcons);
+
+                // Set background color (still supported on Android < 35)
+                if (color != null && !color.isEmpty()) {
+                    try {
+                        window.setStatusBarColor(Color.parseColor(color));
+                    } catch (IllegalArgumentException e) {
+                        // Invalid color format, ignore
+                    }
+                }
+
             } else if (Build.VERSION.SDK_INT >= 23) {
-                // Legacy approach (API 23-29)
+                // Android 6.0-10: Legacy approach using System UI flags
                 View decorView = window.getDecorView();
                 int flags = decorView.getSystemUiVisibility();
 
@@ -107,31 +133,58 @@ public class SystemBarsManager {
                 }
 
                 decorView.setSystemUiVisibility(flags);
-            }
 
-            // Set background color
-            if (color != null && !color.isEmpty()) {
-                try {
-                    window.setStatusBarColor(Color.parseColor(color));
-                } catch (IllegalArgumentException e) {
-                    // Invalid color format, ignore
+                // Set background color
+                if (color != null && !color.isEmpty()) {
+                    try {
+                        window.setStatusBarColor(Color.parseColor(color));
+                    } catch (IllegalArgumentException e) {
+                        // Invalid color format, ignore
+                    }
                 }
             }
+            // Android < 23: Status bar styling not supported
         });
     }
 
     /**
      * Set navigation bar style and color
+     * 
+     * Android 35+: setNavigationBarColor() is deprecated - navigation bar is
+     * automatically transparent
+     * Android < 35: Use setNavigationBarColor() with WindowInsetsControllerCompat
+     * for icon styling
      */
     public void setNavigationBarStyle(String style, String color) {
         activity.runOnUiThread(() -> {
             boolean lightIcons = style.equals("DARK"); // Dark style = light icons
 
-            if (Build.VERSION.SDK_INT >= 30) {
-                // Modern approach
+            if (Build.VERSION.SDK_INT >= 35) {
+                // Android 15+: Navigation bar color is automatically transparent and cannot be
+                // changed
+                // Only control icon styling - the system handles background based on
+                // WindowInsets
+                if (Build.VERSION.SDK_INT >= 30) {
+                    insetsController.setAppearanceLightNavigationBars(!lightIcons);
+                }
+                // Note: For Android 35+, apps should draw proper background behind
+                // WindowInsets.Type.navigationBars() instead of setting window colors
+
+            } else if (Build.VERSION.SDK_INT >= 30) {
+                // Android 11-14: Modern approach using WindowInsetsController
                 insetsController.setAppearanceLightNavigationBars(!lightIcons);
+
+                // Set background color (still supported on Android < 35)
+                if (color != null && !color.isEmpty()) {
+                    try {
+                        window.setNavigationBarColor(Color.parseColor(color));
+                    } catch (IllegalArgumentException e) {
+                        // Invalid color format, ignore
+                    }
+                }
+
             } else if (Build.VERSION.SDK_INT >= 26) {
-                // Legacy approach (API 26-29)
+                // Android 8.0-10: Legacy approach using System UI flags
                 View decorView = window.getDecorView();
                 int flags = decorView.getSystemUiVisibility();
 
@@ -142,16 +195,17 @@ public class SystemBarsManager {
                 }
 
                 decorView.setSystemUiVisibility(flags);
-            }
 
-            // Set background color
-            if (color != null && !color.isEmpty()) {
-                try {
-                    window.setNavigationBarColor(Color.parseColor(color));
-                } catch (IllegalArgumentException e) {
-                    // Invalid color format, ignore
+                // Set background color
+                if (color != null && !color.isEmpty()) {
+                    try {
+                        window.setNavigationBarColor(Color.parseColor(color));
+                    } catch (IllegalArgumentException e) {
+                        // Invalid color format, ignore
+                    }
                 }
             }
+            // Android < 26: Navigation bar styling not supported
         });
     }
 

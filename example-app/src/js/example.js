@@ -111,6 +111,83 @@ class SystemBarsExample {
         }
     }
 
+    async toggleNavigationBar() {
+        if (!this.isInitialized) return;
+
+        try {
+            const insets = await AndroidSystemBars.getInsets();
+
+            if (insets.navigationBarVisible) {
+                await AndroidSystemBars.hideNavigationBar();
+                console.log('🔽 Navigation bar hidden');
+                this.logToUI('Navigation bar hidden');
+            } else {
+                await AndroidSystemBars.showNavigationBar();
+                console.log('🔼 Navigation bar shown');
+                this.logToUI('Navigation bar shown');
+            }
+        } catch (error) {
+            console.error('❌ Failed to toggle navigation bar:', error);
+            this.logToUI(`Failed to toggle navigation bar: ${error.message}`);
+        }
+    }
+
+    async testNavigationBarColors() {
+        if (!this.isInitialized) return;
+
+        try {
+            // Test different navigation bar colors
+            const colors = [
+                { name: 'Red', color: '#ef4444', style: 'LIGHT' },
+                { name: 'Blue', color: '#3b82f6', style: 'LIGHT' },
+                { name: 'Green', color: '#22c55e', style: 'LIGHT' },
+                { name: 'Dark Gray', color: '#374151', style: 'DARK' }
+            ];
+
+            for (const colorTest of colors) {
+                await AndroidSystemBars.setNavigationBarStyle({
+                    style: colorTest.style,
+                    color: this.deviceInfo.isAndroid35Plus ? undefined : colorTest.color
+                });
+
+                const message = this.deviceInfo.isAndroid35Plus
+                    ? `Navigation bar icons: ${colorTest.style} (Android 15+ - color is transparent)`
+                    : `Navigation bar: ${colorTest.name} (${colorTest.color})`;
+
+                console.log(`🎨 ${message}`);
+                this.logToUI(message);
+
+                // Wait 1.5 seconds between color changes
+                await new Promise(resolve => setTimeout(resolve, 1500));
+            }
+
+            // Reset to default
+            await AndroidSystemBars.setNavigationBarStyle({
+                style: 'LIGHT',
+                color: this.deviceInfo.isAndroid35Plus ? undefined : '#ffffff'
+            });
+
+            this.logToUI('Navigation bar reset to default');
+
+        } catch (error) {
+            console.error('❌ Failed to test navigation bar colors:', error);
+            this.logToUI(`Failed to test navigation bar colors: ${error.message}`);
+        }
+    }
+
+    async getInsets() {
+        if (!this.isInitialized) return;
+
+        try {
+            const insets = await AndroidSystemBars.getInsets();
+            console.log('📐 Window Insets:', insets);
+            this.logToUI(`Insets - Top: ${insets.top}px, Bottom: ${insets.bottom}px, Left: ${insets.left}px, Right: ${insets.right}px`);
+        } catch (error) {
+            console.error('❌ Failed to get insets:', error);
+            this.logToUI(`Failed to get insets: ${error.message}`);
+        }
+    }
+
 
 
     updateUI() {
@@ -146,5 +223,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.enterFullscreen = () => systemBars.enterFullscreen();
     window.exitFullscreen = () => systemBars.exitFullscreen();
     window.toggleStatusBar = () => systemBars.toggleStatusBar();
+    window.toggleNavigationBar = () => systemBars.toggleNavigationBar();
+    window.testNavigationBarColors = () => systemBars.testNavigationBarColors();
+    window.getInsets = () => systemBars.getInsets();
     window.testEdgeToEdge = () => systemBars.testEdgeToEdge();
 });

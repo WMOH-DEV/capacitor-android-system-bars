@@ -91,7 +91,7 @@ export class AndroidSystemBarsWeb extends WebPlugin implements AndroidSystemBars
   }
 
   async showNavigationBar(): Promise<void> {
-    // Not supported on web
-    throw this.unimplemented('Not implemented on web.');
+    console.log('AndroidSystemBars.showNavigationBar called on web platform');
+    // Web platforms don't have native navigation bars
   }
 }
