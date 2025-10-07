@@ -30,13 +30,14 @@ class SystemBarsExample {
             const style = theme === 'dark' ? 'DARK' : 'LIGHT';
             const color = theme === 'dark' ? '#111827' : '#ffffff';
 
-            await AndroidSystemBars.setStyle({ style, color });
+            // ✨ NEW: Set both status and navigation bar in ONE call!
+            await AndroidSystemBars.setSystemBarsStyle({
+                style,
+                color
+            });
 
-            // Also set navigation bar style
-            await AndroidSystemBars.setNavigationBarStyle({ style, color });
-
-            console.log(`🎨 Theme set to ${theme}`);
-            this.logToUI(`Theme set to ${theme}`);
+            console.log(`🎨 Theme set to ${theme} (both status & navigation bars)`);
+            this.logToUI(`Theme set to ${theme} (both status & navigation bars)`);
         } catch (error) {
             console.error('❌ Failed to set theme:', error);
             this.logToUI(`Failed to set theme: ${error.message}`);
@@ -60,9 +61,12 @@ class SystemBarsExample {
         if (!this.isInitialized) return;
 
         try {
+            // ✨ NEW: Clear API - specify what to restore after fullscreen
             await AndroidSystemBars.exitFullscreen({
-                style: 'LIGHT',
-                color: '#ffffff'
+                restore: {
+                    style: 'LIGHT',      // Apply to both status & navigation
+                    color: '#ffffff'     // Apply to both status & navigation
+                }
             });
             console.log('🔍 Exited fullscreen mode');
             this.logToUI('Exited fullscreen mode');
@@ -79,11 +83,12 @@ class SystemBarsExample {
             const insets = await AndroidSystemBars.getInsets();
 
             if (insets.statusBarVisible) {
-                await AndroidSystemBars.hide();
+                // ✨ NEW: Clear method names
+                await AndroidSystemBars.hideStatusBar();
                 console.log('📱 Status bar hidden');
                 this.logToUI('Status bar hidden');
             } else {
-                await AndroidSystemBars.show();
+                await AndroidSystemBars.showStatusBar();
                 console.log('📱 Status bar shown');
                 this.logToUI('Status bar shown');
             }
@@ -145,6 +150,7 @@ class SystemBarsExample {
             ];
 
             for (const colorTest of colors) {
+                // ✨ NEW: Can use unified API or individual control
                 await AndroidSystemBars.setNavigationBarStyle({
                     style: colorTest.style,
                     color: this.deviceInfo.isAndroid35Plus ? undefined : colorTest.color
@@ -161,10 +167,12 @@ class SystemBarsExample {
                 await new Promise(resolve => setTimeout(resolve, 1500));
             }
 
-            // Reset to default
-            await AndroidSystemBars.setNavigationBarStyle({
-                style: 'LIGHT',
-                color: this.deviceInfo.isAndroid35Plus ? undefined : '#ffffff'
+            // Reset to default using unified API
+            await AndroidSystemBars.setSystemBarsStyle({
+                navigationBar: {
+                    style: 'LIGHT',
+                    color: this.deviceInfo.isAndroid35Plus ? undefined : '#ffffff'
+                }
             });
 
             this.logToUI('Navigation bar reset to default');
@@ -185,6 +193,50 @@ class SystemBarsExample {
         } catch (error) {
             console.error('❌ Failed to get insets:', error);
             this.logToUI(`Failed to get insets: ${error.message}`);
+        }
+    }
+
+    // ✨ NEW: Demonstrate the flexibility of the new API
+    async demonstrateNewAPI() {
+        if (!this.isInitialized) return;
+
+        try {
+            this.logToUI('🚀 Demonstrating New API Flexibility:');
+
+            // Example 1: Set both bars with same style/color (shorthand)
+            await AndroidSystemBars.setSystemBarsStyle({
+                style: 'DARK',
+                color: '#1f2937'
+            });
+            this.logToUI('✅ Both bars set to dark theme (shorthand)');
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            // Example 2: Set bars with different styles (individual control)
+            await AndroidSystemBars.setSystemBarsStyle({
+                statusBar: { style: 'LIGHT', color: '#ffffff' },
+                navigationBar: { style: 'DARK', color: '#111827' }
+            });
+            this.logToUI('✅ Status bar light, Navigation bar dark');
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            // Example 3: Set only status bar (precise control)
+            await AndroidSystemBars.setStatusBarStyle({
+                style: 'DARK',
+                color: '#ef4444'
+            });
+            this.logToUI('✅ Only status bar changed to red');
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            // Example 4: Reset to default
+            await AndroidSystemBars.setSystemBarsStyle({
+                style: 'LIGHT',
+                color: '#ffffff'
+            });
+            this.logToUI('✅ Both bars reset to light theme');
+
+        } catch (error) {
+            console.error('❌ Failed to demonstrate new API:', error);
+            this.logToUI(`Failed to demonstrate new API: ${error.message}`);
         }
     }
 
@@ -227,4 +279,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.testNavigationBarColors = () => systemBars.testNavigationBarColors();
     window.getInsets = () => systemBars.getInsets();
     window.testEdgeToEdge = () => systemBars.testEdgeToEdge();
+    window.demonstrateNewAPI = () => systemBars.demonstrateNewAPI();
 });

@@ -4,30 +4,73 @@ export interface AndroidSystemBarsPlugin {
    */
   initialize(): Promise<InitializeResult>;
 
+  // === UNIFIED SYSTEM BARS API ===
+
   /**
-   * Set status bar style and color
+   * Set both status bar AND navigation bar style/color in one call
+   * This is the recommended method for most use cases
    */
-  setStyle(options: SetStyleOptions): Promise<void>;
+  setSystemBarsStyle(options: SetSystemBarsStyleOptions): Promise<void>;
+
+  // === INDIVIDUAL BAR CONTROL ===
+
+  /**
+   * Set ONLY status bar style and color
+   */
+  setStatusBarStyle(options: SetStatusBarStyleOptions): Promise<void>;
+
+  /**
+   * Set ONLY navigation bar style and color
+   */
+  setNavigationBarStyle(options: SetNavigationBarStyleOptions): Promise<void>;
+
+  // === STATUS BAR VISIBILITY ===
 
   /**
    * Hide status bar
    */
-  hide(): Promise<void>;
+  hideStatusBar(): Promise<void>;
 
   /**
    * Show status bar
    */
-  show(): Promise<void>;
+  showStatusBar(): Promise<void>;
+
+  // === NAVIGATION BAR VISIBILITY ===
 
   /**
-   * Enter fullscreen mode
+   * Hide navigation bar
+   */
+  hideNavigationBar(): Promise<void>;
+
+  /**
+   * Show navigation bar
+   */
+  showNavigationBar(): Promise<void>;
+
+  // === FULLSCREEN MODE ===
+
+  /**
+   * Enter fullscreen mode (hides both status and navigation bars)
    */
   enterFullscreen(options: EnterFullscreenOptions): Promise<void>;
 
   /**
-   * Exit fullscreen mode
+   * Exit fullscreen mode and restore system bars
    */
-  exitFullscreen(options: ExitFullscreenOptions): Promise<void>;
+  exitFullscreen(options?: ExitFullscreenOptions): Promise<void>;
+
+  /**
+   * Check if fullscreen mode is currently active
+   */
+  isFullscreenActive(): Promise<{ active: boolean }>;
+
+  /**
+   * Force exit fullscreen mode (emergency fallback)
+   */
+  forceExitFullscreen(): Promise<void>;
+
+  // === ADVANCED FEATURES ===
 
   /**
    * Set overlay mode (Android 35+ only)
@@ -39,20 +82,25 @@ export interface AndroidSystemBarsPlugin {
    */
   getInsets(): Promise<InsetsResult>;
 
-  /**
-   * Set navigation bar style and color
-   */
-  setNavigationBarStyle(options: SetNavigationBarStyleOptions): Promise<void>;
+  // === DEPRECATED METHODS (for backward compatibility) ===
 
   /**
-   * Hide navigation bar
+   * @deprecated Use setStatusBarStyle() instead
+   * Set status bar style and color
    */
-  hideNavigationBar(): Promise<void>;
+  setStyle(options: SetStatusBarStyleOptions): Promise<void>;
 
   /**
-   * Show navigation bar
+   * @deprecated Use hideStatusBar() instead
+   * Hide status bar
    */
-  showNavigationBar(): Promise<void>;
+  hide(): Promise<void>;
+
+  /**
+   * @deprecated Use showStatusBar() instead
+   * Show status bar
+   */
+  show(): Promise<void>;
 }
 
 export interface InitializeResult {
@@ -87,7 +135,41 @@ export interface InitializeResult {
   navigationBarHeight: number;
 }
 
-export interface SetStyleOptions {
+// === UNIFIED SYSTEM BARS ===
+
+export interface SetSystemBarsStyleOptions {
+  /**
+   * Status bar configuration
+   */
+  statusBar?: {
+    style?: 'LIGHT' | 'DARK' | 'DEFAULT';
+    color?: string;
+  };
+
+  /**
+   * Navigation bar configuration
+   */
+  navigationBar?: {
+    style?: 'LIGHT' | 'DARK' | 'DEFAULT';
+    color?: string;
+  };
+
+  /**
+   * Apply same style to both bars (shorthand)
+   * If specified, overrides individual statusBar/navigationBar style
+   */
+  style?: 'LIGHT' | 'DARK' | 'DEFAULT';
+
+  /**
+   * Apply same color to both bars (shorthand)
+   * If specified, overrides individual statusBar/navigationBar color
+   */
+  color?: string;
+}
+
+// === INDIVIDUAL BAR CONTROL ===
+
+export interface SetStatusBarStyleOptions {
   /**
    * Status bar style
    */
@@ -99,6 +181,20 @@ export interface SetStyleOptions {
   color?: string;
 }
 
+export interface SetNavigationBarStyleOptions {
+  /**
+   * Navigation bar style
+   */
+  style: 'LIGHT' | 'DARK' | 'DEFAULT';
+
+  /**
+   * Navigation bar background color (hex format: #RRGGBB or #AARRGGBB)
+   */
+  color?: string;
+}
+
+// === FULLSCREEN MODE ===
+
 export interface EnterFullscreenOptions {
   /**
    * Fullscreen mode type
@@ -108,15 +204,39 @@ export interface EnterFullscreenOptions {
 
 export interface ExitFullscreenOptions {
   /**
-   * Status bar style to restore
+   * System bars configuration to restore after exiting fullscreen
+   * If not provided, will restore to system default
    */
-  style: 'LIGHT' | 'DARK' | 'DEFAULT';
+  restore?: {
+    /**
+     * Status bar configuration to restore
+     */
+    statusBar?: {
+      style?: 'LIGHT' | 'DARK' | 'DEFAULT';
+      color?: string;
+    };
 
-  /**
-   * Status bar color to restore
-   */
-  color?: string;
+    /**
+     * Navigation bar configuration to restore
+     */
+    navigationBar?: {
+      style?: 'LIGHT' | 'DARK' | 'DEFAULT';
+      color?: string;
+    };
+
+    /**
+     * Apply same style to both bars (shorthand)
+     */
+    style?: 'LIGHT' | 'DARK' | 'DEFAULT';
+
+    /**
+     * Apply same color to both bars (shorthand)
+     */
+    color?: string;
+  };
 }
+
+// === ADVANCED FEATURES ===
 
 export interface SetOverlayOptions {
   /**
@@ -155,16 +275,4 @@ export interface InsetsResult {
    * Whether navigation bar is visible
    */
   navigationBarVisible: boolean;
-}
-
-export interface SetNavigationBarStyleOptions {
-  /**
-   * Navigation bar style
-   */
-  style: 'LIGHT' | 'DARK' | 'DEFAULT';
-
-  /**
-   * Navigation bar background color (hex format: #RRGGBB or #AARRGGBB)
-   */
-  color?: string;
 }

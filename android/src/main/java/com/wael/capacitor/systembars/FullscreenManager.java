@@ -37,6 +37,9 @@ public class FullscreenManager {
      */
     public void enterFullscreen(String mode) {
         activity.runOnUiThread(() -> {
+            // Set fullscreen state
+            isFullscreenActive = true;
+
             // Remove webview padding
             paddingManager.removePadding();
 
@@ -128,10 +131,133 @@ public class FullscreenManager {
                 });
             }
 
+            // Reset fullscreen state
+            isFullscreenActive = false;
+
             // Restore status bar style and color with a slight delay
             decorView.postDelayed(() -> {
                 systemBarsManager.setStatusBarStyle(style, color);
             }, 50);
+        });
+    }
+
+    /**
+     * Exit fullscreen and restore both status and navigation bars with individual
+     * styles
+     */
+    public void exitFullscreen(String statusStyle, String statusColor, String navStyle, String navColor) {
+        activity.runOnUiThread(() -> {
+            View decorView = window.getDecorView();
+
+            if (Build.VERSION.SDK_INT >= 35) {
+                // Android 35+: Use modern WindowInsetsController
+                WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, decorView);
+
+                controller.show(WindowInsetsCompat.Type.systemBars());
+                controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_DEFAULT);
+
+                // Restore edge-to-edge mode
+                systemBarsManager.reapplySystemUI();
+
+            } else if (Build.VERSION.SDK_INT >= 30) {
+                // Android 30-34: Use WindowInsetsController but apply padding
+                WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, decorView);
+
+                controller.show(WindowInsetsCompat.Type.systemBars());
+                controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_DEFAULT);
+
+                // CRITICAL: Apply padding after system bars are shown
+                decorView.post(() -> {
+                    paddingManager.applyPadding();
+                });
+
+            } else {
+                // Android < 30: Legacy System UI flags
+                int flags = decorView.getSystemUiVisibility();
+
+                // Clear all fullscreen flags
+                flags &= ~(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
+
+                // Restore stable layout flags
+                flags |= View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
+
+                decorView.setSystemUiVisibility(flags);
+
+                // CRITICAL: Apply padding after layout flags are set
+                decorView.post(() -> {
+                    paddingManager.applyPadding();
+                });
+            }
+
+            // Reset fullscreen state
+            isFullscreenActive = false;
+
+            // Restore both status and navigation bar styles with a slight delay
+            decorView.postDelayed(() -> {
+                if (statusStyle != null || statusColor != null) {
+                    systemBarsManager.setStatusBarStyle(
+                            statusStyle != null ? statusStyle : "DEFAULT",
+                            statusColor);
+                }
+                if (navStyle != null || navColor != null) {
+                    systemBarsManager.setNavigationBarStyle(
+                            navStyle != null ? navStyle : "DEFAULT",
+                            navColor);
+                }
+            }, 50);
+        });
+    }
+
+    /**
+     * Exit fullscreen to system default (no custom restoration)
+     */
+    public void exitFullscreen() {
+        exitFullscreen("DEFAULT", null, "DEFAULT", null);
+    }
+
+    // === NEW FULLSCREEN STATE TRACKING ===
+
+    private boolean isFullscreenActive = false;
+
+    /**
+     * Check if fullscreen mode is currently active
+     */
+    public boolean isFullscreenActive() {
+        return isFullscreenActive;
+    }
+
+    /**
+     * Force exit fullscreen mode (emergency fallback)
+     */
+    public void forceExit() {
+        activity.runOnUiThread(() -> {
+            View decorView = window.getDecorView();
+
+            // Force clear all possible fullscreen flags
+            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+
+            if (Build.VERSION.SDK_INT >= 30) {
+                WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, decorView);
+                controller.show(WindowInsetsCompat.Type.systemBars());
+                controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_DEFAULT);
+            }
+
+            // Force restore padding
+            paddingManager.applyPadding();
+
+            // Reset state
+            isFullscreenActive = false;
+
+            // Restore system bars to default
+            decorView.postDelayed(() -> {
+                systemBarsManager.setStatusBarStyle("DEFAULT", null);
+                systemBarsManager.setNavigationBarStyle("DEFAULT", null);
+            }, 100);
         });
     }
 }

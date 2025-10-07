@@ -3,7 +3,8 @@ import { WebPlugin } from '@capacitor/core';
 import type {
   AndroidSystemBarsPlugin,
   InitializeResult,
-  SetStyleOptions,
+  SetSystemBarsStyleOptions,
+  SetStatusBarStyleOptions,
   EnterFullscreenOptions,
   ExitFullscreenOptions,
   SetOverlayOptions,
@@ -24,18 +25,46 @@ export class AndroidSystemBarsWeb extends WebPlugin implements AndroidSystemBars
     };
   }
 
-  async setStyle(options: SetStyleOptions): Promise<void> {
-    console.log('AndroidSystemBars.setStyle called on web platform', options);
+  // === UNIFIED SYSTEM BARS API ===
+
+  async setSystemBarsStyle(options: SetSystemBarsStyleOptions): Promise<void> {
+    console.log('AndroidSystemBars.setSystemBarsStyle called on web platform', options);
+    // Web platforms don't have native system bars
+  }
+
+  // === INDIVIDUAL BAR CONTROL ===
+
+  async setStatusBarStyle(options: SetStatusBarStyleOptions): Promise<void> {
+    console.log('AndroidSystemBars.setStatusBarStyle called on web platform', options);
+    // Web platforms don't have native system bars
+  }
+
+  // === STATUS BAR VISIBILITY ===
+
+  async hideStatusBar(): Promise<void> {
+    console.log('AndroidSystemBars.hideStatusBar called on web platform');
+    // Web platforms don't have native system bars
+  }
+
+  async showStatusBar(): Promise<void> {
+    console.log('AndroidSystemBars.showStatusBar called on web platform');
+    // Web platforms don't have native system bars
+  }
+
+  // === DEPRECATED METHODS (backward compatibility) ===
+
+  async setStyle(options: SetStatusBarStyleOptions): Promise<void> {
+    console.log('AndroidSystemBars.setStyle called on web platform (deprecated)', options);
     // Web platforms don't have native system bars
   }
 
   async hide(): Promise<void> {
-    console.log('AndroidSystemBars.hide called on web platform');
+    console.log('AndroidSystemBars.hide called on web platform (deprecated)');
     // Web platforms don't have native system bars
   }
 
   async show(): Promise<void> {
-    console.log('AndroidSystemBars.show called on web platform');
+    console.log('AndroidSystemBars.show called on web platform (deprecated)');
     // Web platforms don't have native system bars
   }
 
@@ -51,7 +80,7 @@ export class AndroidSystemBarsWeb extends WebPlugin implements AndroidSystemBars
     }
   }
 
-  async exitFullscreen(options: ExitFullscreenOptions): Promise<void> {
+  async exitFullscreen(options?: ExitFullscreenOptions): Promise<void> {
     console.log('AndroidSystemBars.exitFullscreen called on web platform', options);
     // For web, exit fullscreen
     try {
@@ -60,6 +89,24 @@ export class AndroidSystemBarsWeb extends WebPlugin implements AndroidSystemBars
       }
     } catch (error) {
       console.warn('Exit fullscreen failed', error);
+    }
+  }
+
+  async isFullscreenActive(): Promise<{ active: boolean }> {
+    // For web, check if document is in fullscreen mode
+    const active = !!document.fullscreenElement;
+    return { active };
+  }
+
+  async forceExitFullscreen(): Promise<void> {
+    console.log('AndroidSystemBars.forceExitFullscreen called on web platform');
+    // Force exit fullscreen on web
+    try {
+      if (document.exitFullscreen && document.fullscreenElement) {
+        await document.exitFullscreen();
+      }
+    } catch (error) {
+      console.warn('Force exit fullscreen failed', error);
     }
   }
 
