@@ -31,7 +31,21 @@ npx cap sync
 
 ### AndroidManifest.xml
 
-Add the following to your `android/app/src/main/AndroidManifest.xml`:
+**The plugin works with ANY `windowSoftInputMode` setting.** No specific configuration is required.
+
+For the best keyboard experience, we recommend using the default behavior (don't specify `windowSoftInputMode`):
+
+```xml
+<activity
+    android:name=".MainActivity"
+    android:theme="@style/AppTheme.NoActionBarLaunch">
+    <!-- No windowSoftInputMode needed - Android will use default adjustResize -->
+</activity>
+```
+
+#### Advanced: Custom Keyboard Behavior (Optional)
+
+If you need full control over keyboard handling for specific use cases:
 
 ```xml
 <activity
@@ -41,22 +55,51 @@ Add the following to your `android/app/src/main/AndroidManifest.xml`:
 </activity>
 ```
 
-### Capacitor Configuration
+> **⚠️ Note:** Using `adjustNothing` requires you to handle keyboard visibility manually with JavaScript using the `@capacitor/keyboard` plugin. For most apps, the default `adjustResize` behavior provides better user experience as Android automatically handles keyboard positioning.
 
-```typescript
-// capacitor.config.ts
-import { CapacitorConfig } from '@capacitor/cli';
+### Ionic/Angular CSS Configuration
 
-const config: CapacitorConfig = {
-  plugins: {
-    Keyboard: {
-      resizeOnFullScreen: false, // Important for edge-to-edge
-    },
-  },
-};
+If you're using Ionic with Android 35+ (Android 15), you may need to add CSS to prevent modals and popovers from inheriting window insets padding. Add this to your `src/global.scss`:
 
-export default config;
+```scss
+// Fix Android 35+ modal/popover padding issue
+// Android 35+ Modal Fix - Prevent header/footer from inheriting window insets
+ion-modal {
+  ion-header {
+    // Remove extra padding from header that comes from window insets
+    padding-top: 0 !important;
+
+    ion-toolbar {
+      padding-top: 0 !important;
+      --padding-top: 0 !important;
+      --min-height: 56px; // Standard toolbar height
+
+      ion-title {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+      }
+
+      ion-buttons {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+      }
+    }
+  }
+
+  ion-footer {
+    // Remove extra padding from footer that comes from window insets
+    padding-bottom: 0 !important;
+
+    ion-toolbar {
+      padding-bottom: 0 !important;
+      --padding-bottom: 0 !important;
+      --min-height: 56px;
+    }
+  }
+}
 ```
+
+> **💡 Why?** On Android 35+, the plugin enables edge-to-edge mode which causes modals to inherit window insets. This CSS prevents unwanted padding in modal headers/footers.
 
 ## Usage
 
@@ -312,24 +355,24 @@ await AndroidSystemBars.setStatusBarStyle({ style: 'DARK' });
 
 <docgen-index>
 
-* [`initialize()`](#initialize)
-* [`setSystemBarsStyle(...)`](#setsystembarsstyle)
-* [`setStatusBarStyle(...)`](#setstatusbarstyle)
-* [`setNavigationBarStyle(...)`](#setnavigationbarstyle)
-* [`hideStatusBar()`](#hidestatusbar)
-* [`showStatusBar()`](#showstatusbar)
-* [`hideNavigationBar()`](#hidenavigationbar)
-* [`showNavigationBar()`](#shownavigationbar)
-* [`enterFullscreen(...)`](#enterfullscreen)
-* [`exitFullscreen(...)`](#exitfullscreen)
-* [`isFullscreenActive()`](#isfullscreenactive)
-* [`forceExitFullscreen()`](#forceexitfullscreen)
-* [`setOverlay(...)`](#setoverlay)
-* [`getInsets()`](#getinsets)
-* [`setStyle(...)`](#setstyle)
-* [`hide()`](#hide)
-* [`show()`](#show)
-* [Interfaces](#interfaces)
+- [`initialize()`](#initialize)
+- [`setSystemBarsStyle(...)`](#setsystembarsstyle)
+- [`setStatusBarStyle(...)`](#setstatusbarstyle)
+- [`setNavigationBarStyle(...)`](#setnavigationbarstyle)
+- [`hideStatusBar()`](#hidestatusbar)
+- [`showStatusBar()`](#showstatusbar)
+- [`hideNavigationBar()`](#hidenavigationbar)
+- [`showNavigationBar()`](#shownavigationbar)
+- [`enterFullscreen(...)`](#enterfullscreen)
+- [`exitFullscreen(...)`](#exitfullscreen)
+- [`isFullscreenActive()`](#isfullscreenactive)
+- [`forceExitFullscreen()`](#forceexitfullscreen)
+- [`setOverlay(...)`](#setoverlay)
+- [`getInsets()`](#getinsets)
+- [`setStyle(...)`](#setstyle)
+- [`hide()`](#hide)
+- [`show()`](#show)
+- [Interfaces](#interfaces)
 
 </docgen-index>
 
@@ -346,8 +389,7 @@ Initialize plugin and get device info
 
 **Returns:** <code>Promise&lt;<a href="#initializeresult">InitializeResult</a>&gt;</code>
 
---------------------
-
+---
 
 ### setSystemBarsStyle(...)
 
@@ -362,8 +404,7 @@ This is the recommended method for most use cases
 | ------------- | ------------------------------------------------------------------------------- |
 | **`options`** | <code><a href="#setsystembarsstyleoptions">SetSystemBarsStyleOptions</a></code> |
 
---------------------
-
+---
 
 ### setStatusBarStyle(...)
 
@@ -377,8 +418,7 @@ Set ONLY status bar style and color
 | ------------- | ----------------------------------------------------------------------------- |
 | **`options`** | <code><a href="#setstatusbarstyleoptions">SetStatusBarStyleOptions</a></code> |
 
---------------------
-
+---
 
 ### setNavigationBarStyle(...)
 
@@ -392,8 +432,7 @@ Set ONLY navigation bar style and color
 | ------------- | ------------------------------------------------------------------------------------- |
 | **`options`** | <code><a href="#setnavigationbarstyleoptions">SetNavigationBarStyleOptions</a></code> |
 
---------------------
-
+---
 
 ### hideStatusBar()
 
@@ -403,8 +442,7 @@ hideStatusBar() => Promise<void>
 
 Hide status bar
 
---------------------
-
+---
 
 ### showStatusBar()
 
@@ -414,8 +452,7 @@ showStatusBar() => Promise<void>
 
 Show status bar
 
---------------------
-
+---
 
 ### hideNavigationBar()
 
@@ -425,8 +462,7 @@ hideNavigationBar() => Promise<void>
 
 Hide navigation bar
 
---------------------
-
+---
 
 ### showNavigationBar()
 
@@ -436,8 +472,7 @@ showNavigationBar() => Promise<void>
 
 Show navigation bar
 
---------------------
-
+---
 
 ### enterFullscreen(...)
 
@@ -451,8 +486,7 @@ Enter fullscreen mode (hides both status and navigation bars)
 | ------------- | ------------------------------------------------------------------------- |
 | **`options`** | <code><a href="#enterfullscreenoptions">EnterFullscreenOptions</a></code> |
 
---------------------
-
+---
 
 ### exitFullscreen(...)
 
@@ -466,8 +500,7 @@ Exit fullscreen mode and restore system bars
 | ------------- | ----------------------------------------------------------------------- |
 | **`options`** | <code><a href="#exitfullscreenoptions">ExitFullscreenOptions</a></code> |
 
---------------------
-
+---
 
 ### isFullscreenActive()
 
@@ -479,8 +512,7 @@ Check if fullscreen mode is currently active
 
 **Returns:** <code>Promise&lt;{ active: boolean; }&gt;</code>
 
---------------------
-
+---
 
 ### forceExitFullscreen()
 
@@ -490,8 +522,7 @@ forceExitFullscreen() => Promise<void>
 
 Force exit fullscreen mode (emergency fallback)
 
---------------------
-
+---
 
 ### setOverlay(...)
 
@@ -505,8 +536,7 @@ Set overlay mode (Android 35+ only)
 | ------------- | --------------------------------------------------------------- |
 | **`options`** | <code><a href="#setoverlayoptions">SetOverlayOptions</a></code> |
 
---------------------
-
+---
 
 ### getInsets()
 
@@ -518,8 +548,7 @@ Get current window insets information
 
 **Returns:** <code>Promise&lt;<a href="#insetsresult">InsetsResult</a>&gt;</code>
 
---------------------
-
+---
 
 ### setStyle(...)
 
@@ -531,8 +560,7 @@ setStyle(options: SetStatusBarStyleOptions) => Promise<void>
 | ------------- | ----------------------------------------------------------------------------- |
 | **`options`** | <code><a href="#setstatusbarstyleoptions">SetStatusBarStyleOptions</a></code> |
 
---------------------
-
+---
 
 ### hide()
 
@@ -540,8 +568,7 @@ setStyle(options: SetStatusBarStyleOptions) => Promise<void>
 hide() => Promise<void>
 ```
 
---------------------
-
+---
 
 ### show()
 
@@ -549,11 +576,9 @@ hide() => Promise<void>
 show() => Promise<void>
 ```
 
---------------------
-
+---
 
 ### Interfaces
-
 
 #### InitializeResult
 
@@ -566,7 +591,6 @@ show() => Promise<void>
 | **`statusBarHeight`**      | <code>number</code>  | Status bar height in pixels                   |
 | **`navigationBarHeight`**  | <code>number</code>  | Navigation bar height in pixels               |
 
-
 #### SetSystemBarsStyleOptions
 
 | Prop                | Type                                                                     | Description                                                                                                |
@@ -576,14 +600,12 @@ show() => Promise<void>
 | **`style`**         | <code>'LIGHT' \| 'DARK' \| 'DEFAULT'</code>                              | Apply same style to both bars (shorthand) If specified, overrides individual statusBar/navigationBar style |
 | **`color`**         | <code>string</code>                                                      | Apply same color to both bars (shorthand) If specified, overrides individual statusBar/navigationBar color |
 
-
 #### SetStatusBarStyleOptions
 
 | Prop        | Type                                        | Description                                                    |
 | ----------- | ------------------------------------------- | -------------------------------------------------------------- |
 | **`style`** | <code>'LIGHT' \| 'DARK' \| 'DEFAULT'</code> | Status bar style                                               |
 | **`color`** | <code>string</code>                         | Status bar background color (hex format: #RRGGBB or #AARRGGBB) |
-
 
 #### SetNavigationBarStyleOptions
 
@@ -592,13 +614,11 @@ show() => Promise<void>
 | **`style`** | <code>'LIGHT' \| 'DARK' \| 'DEFAULT'</code> | Navigation bar style                                               |
 | **`color`** | <code>string</code>                         | Navigation bar background color (hex format: #RRGGBB or #AARRGGBB) |
 
-
 #### EnterFullscreenOptions
 
 | Prop       | Type                               | Description          |
 | ---------- | ---------------------------------- | -------------------- |
 | **`mode`** | <code>'IMMERSIVE' \| 'LEAN'</code> | Fullscreen mode type |
-
 
 #### ExitFullscreenOptions
 
@@ -606,13 +626,11 @@ show() => Promise<void>
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
 | **`restore`** | <code>{ statusBar?: { style?: 'LIGHT' \| 'DARK' \| 'DEFAULT'; color?: string; }; navigationBar?: { style?: 'LIGHT' \| 'DARK' \| 'DEFAULT'; color?: string; }; style?: 'LIGHT' \| 'DARK' \| 'DEFAULT'; color?: string; }</code> | System bars configuration to restore after exiting fullscreen If not provided, will restore to system default |
 
-
 #### SetOverlayOptions
 
 | Prop          | Type                 | Description                                       |
 | ------------- | -------------------- | ------------------------------------------------- |
 | **`overlay`** | <code>boolean</code> | Whether to enable overlay mode (Android 35+ only) |
-
 
 #### InsetsResult
 
@@ -639,15 +657,35 @@ show() => Promise<void>
    - Plugin automatically handles lifecycle events
    - State is restored automatically
 
-3. **Keyboard resize issues**
-   - Set `android:windowSoftInputMode="adjustNothing"` in AndroidManifest.xml
-   - Disable `resizeOnFullScreen` in Keyboard plugin config
+3. **Keyboard covering input fields**
+   - **Recommended:** Don't specify `windowSoftInputMode` in AndroidManifest.xml (let Android use default)
+   - Android will automatically handle keyboard positioning with `adjustResize` mode
+   - **Advanced:** Use `adjustNothing` + `@capacitor/keyboard` plugin for manual control
+   - See [KEYBOARD_MODE_EXPLANATION.md](./KEYBOARD_MODE_EXPLANATION.md) for details
 
-4. **AdMob banner issues**
+4. **Modal headers/footers have extra padding (Android 35+)**
+   - This is expected behavior with edge-to-edge mode
+   - Fix by adding CSS to your `src/global.scss`:
+     ```scss
+     ion-modal,
+     ion-popover {
+       --ion-safe-area-top: 0 !important;
+       --ion-safe-area-bottom: 0 !important;
+       ion-header {
+         padding-top: 0 !important;
+       }
+       ion-footer {
+         padding-bottom: 0 !important;
+       }
+     }
+     ```
+   - See [ANDROID_35_MODAL_PADDING_FIX.md](./ANDROID_35_MODAL_PADDING_FIX.md) for complete solution
+
+5. **AdMob banner positioning issues**
    - Plugin coordinates with system bar state changes
    - No additional configuration needed
 
-5. **Using deprecated methods**
+6. **Using deprecated methods**
    - Old methods like `setStyle()`, `hide()`, `show()` still work but show deprecation warnings
    - Migrate to new unified API (`setSystemBarsStyle()`, `hideStatusBar()`, `showStatusBar()`) for better clarity
 
