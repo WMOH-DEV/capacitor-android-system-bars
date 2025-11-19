@@ -62,9 +62,9 @@ public class SystemBarsManager {
             insetsController.setSystemBarsBehavior(
                     WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
 
-            // Make status bar transparent
-            window.setStatusBarColor(Color.TRANSPARENT);
-            window.setNavigationBarColor(Color.TRANSPARENT);
+            // Note: setStatusBarColor() and setNavigationBarColor() are deprecated in Android 15+
+            // The system automatically makes bars transparent when edge-to-edge is enabled
+            // Apps should draw proper background behind WindowInsets instead
         }
     }
 

@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.4] - 2025-11-19
+
+### Fixed
+
+- **Android 15+ Compatibility**: Removed deprecated `setStatusBarColor()` and `setNavigationBarColor()` API calls on Android 35+
+  - These methods are automatically handled by the system when edge-to-edge is enabled
+  - Fixes Google Play Console warning about deprecated APIs
+  - Maintains full compatibility with Android API 21-35+
+  - System bars remain transparent on Android 15+ without using deprecated methods
+
+### Technical
+
+- Updated `SystemBarsManager.java` to remove deprecated API usage in `enableEdgeToEdge()` method
+- Edge-to-edge transparency now achieved through `WindowCompat.setDecorFitsSystemWindows()` only
+- Compliant with Android 15's edge-to-edge best practices
+
+---
+
 ## [1.2.3] - 2025-10-07
 
 ### Fixed
