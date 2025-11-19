@@ -80,7 +80,10 @@ public class SystemBarsManager {
             // Set up WindowInsets listener for proper inset handling (required by Android 15+)
             // Apply insets to WebView instead of decor view to allow custom coloring
             if (webView != null) {
-                setupWindowInsetsListener();
+                // Post with delay to ensure WebView is fully attached to window
+                webView.post(() -> {
+                    setupWindowInsetsListener();
+                });
             }
         }
     }
@@ -95,6 +98,9 @@ public class SystemBarsManager {
      */
     private void setupWindowInsetsListener() {
         if (webView == null) return;
+        
+        // Ensure the WebView can receive insets
+        webView.setFitsSystemWindows(false);
         
         ViewCompat.setOnApplyWindowInsetsListener(webView, (v, windowInsets) -> {
             // Get system bar insets
@@ -113,6 +119,9 @@ public class SystemBarsManager {
             // Return insets to allow parent views to handle them too
             return windowInsets;
         });
+        
+        // Request insets to be applied immediately
+        ViewCompat.requestApplyInsets(webView);
     }
 
     /**
