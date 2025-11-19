@@ -6,6 +6,7 @@ import android.os.Build;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowInsetsController;
+import android.webkit.WebView;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
@@ -27,6 +28,7 @@ public class SystemBarsManager {
     private final Activity activity;
     private final Window window;
     private WindowInsetsControllerCompat insetsController;
+    private WebView webView; // Add reference to WebView for insets handling
 
     public SystemBarsManager(Activity activity) {
         this.activity = activity;
@@ -35,6 +37,13 @@ public class SystemBarsManager {
         if (Build.VERSION.SDK_INT >= 30) {
             insetsController = WindowCompat.getInsetsController(window, window.getDecorView());
         }
+    }
+
+    /**
+     * Set WebView reference for Android 35+ insets handling
+     */
+    public void setWebView(WebView webView) {
+        this.webView = webView;
     }
 
     /**
@@ -66,10 +75,13 @@ public class SystemBarsManager {
 
             // Note: setStatusBarColor() and setNavigationBarColor() are deprecated in Android 15+
             // The system automatically makes bars transparent when edge-to-edge is enabled
-            // Apps should draw proper background behind WindowInsets instead
+            // For custom status bar colors, apps should draw background in their WebView/content
 
             // Set up WindowInsets listener for proper inset handling (required by Android 15+)
-            setupWindowInsetsListener();
+            // Apply insets to WebView instead of decor view to allow custom coloring
+            if (webView != null) {
+                setupWindowInsetsListener();
+            }
         }
     }
 
@@ -77,15 +89,20 @@ public class SystemBarsManager {
      * Setup WindowInsets listener to properly handle system bar insets
      * This is required for Android 15+ edge-to-edge compliance
      * Reference: https://developer.android.com/develop/ui/views/layout/edge-to-edge#kotlin
+     * 
+     * IMPORTANT: We apply insets to WebView, NOT the decor view, to allow
+     * custom background colors in the web content (via CSS)
      */
     private void setupWindowInsetsListener() {
-        View decorView = window.getDecorView();
-        ViewCompat.setOnApplyWindowInsetsListener(decorView, (v, windowInsets) -> {
+        if (webView == null) return;
+        
+        ViewCompat.setOnApplyWindowInsetsListener(webView, (v, windowInsets) -> {
             // Get system bar insets
             Insets systemBarsInsets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
             
-            // Apply insets as padding to the root view
+            // Apply insets as padding to the WebView
             // This ensures content is not hidden behind system bars
+            // while allowing the app to set custom background colors via CSS
             v.setPadding(
                 systemBarsInsets.left,
                 systemBarsInsets.top,
@@ -93,8 +110,8 @@ public class SystemBarsManager {
                 systemBarsInsets.bottom
             );
             
-            // Return the insets to allow other views to handle them
-            return WindowInsetsCompat.CONSUMED;
+            // Return insets to allow parent views to handle them too
+            return windowInsets;
         });
     }
 
@@ -118,25 +135,24 @@ public class SystemBarsManager {
     /**
      * Set status bar style and color
      * 
-     * Android 35+: setStatusBarColor() is deprecated - status bar is automatically
-     * transparent
-     * Android < 35: Use setStatusBarColor() with WindowInsetsControllerCompat for
-     * icon styling
+     * Android 35+: setStatusBarColor() is deprecated - inject CSS to color the status bar area
+     * Android < 35: Use setStatusBarColor() with WindowInsetsControllerCompat for icon styling
      */
     public void setStatusBarStyle(String style, String color) {
         activity.runOnUiThread(() -> {
             boolean lightIcons = style.equals("DARK"); // Dark style = light icons
 
             if (Build.VERSION.SDK_INT >= 35) {
-                // Android 15+: Status bar color is automatically transparent and cannot be
-                // changed
-                // Only control icon styling - the system handles background based on
-                // WindowInsets
+                // Android 15+: Status bar color is automatically transparent
+                // Set icon styling
                 if (Build.VERSION.SDK_INT >= 30) {
                     insetsController.setAppearanceLightStatusBars(!lightIcons);
                 }
-                // Note: For Android 35+, apps should draw proper background behind
-                // WindowInsets.Type.statusBars() instead of setting window colors
+                
+                // Inject CSS to color the status bar area in the WebView
+                if (color != null && !color.isEmpty() && webView != null) {
+                    injectStatusBarBackgroundCSS(color);
+                }
 
             } else if (Build.VERSION.SDK_INT >= 30) {
                 // Android 11-14: Modern approach using WindowInsetsController
@@ -178,27 +194,50 @@ public class SystemBarsManager {
     }
 
     /**
+     * Inject CSS to set status bar background color on Android 35+
+     * This is the proper way to color the status bar area in edge-to-edge mode
+     */
+    private void injectStatusBarBackgroundCSS(String color) {
+        if (webView == null) return;
+        
+        String javascript = 
+            "(function() {" +
+            "  let style = document.getElementById('capacitor-status-bar-style');" +
+            "  if (!style) {" +
+            "    style = document.createElement('style');" +
+            "    style.id = 'capacitor-status-bar-style';" +
+            "    document.head.appendChild(style);" +
+            "  }" +
+            "  style.textContent = 'body { --status-bar-color: " + color + "; }';" +
+            "  document.body.style.background = '" + color + "';" +
+            "})();";
+        
+        webView.post(() -> {
+            webView.evaluateJavascript(javascript, null);
+        });
+    }
+
+    /**
      * Set navigation bar style and color
      * 
-     * Android 35+: setNavigationBarColor() is deprecated - navigation bar is
-     * automatically transparent
-     * Android < 35: Use setNavigationBarColor() with WindowInsetsControllerCompat
-     * for icon styling
+     * Android 35+: setNavigationBarColor() is deprecated - inject CSS to color the navigation bar area
+     * Android < 35: Use setNavigationBarColor() with WindowInsetsControllerCompat for icon styling
      */
     public void setNavigationBarStyle(String style, String color) {
         activity.runOnUiThread(() -> {
             boolean lightIcons = style.equals("DARK"); // Dark style = light icons
 
             if (Build.VERSION.SDK_INT >= 35) {
-                // Android 15+: Navigation bar color is automatically transparent and cannot be
-                // changed
-                // Only control icon styling - the system handles background based on
-                // WindowInsets
+                // Android 15+: Navigation bar color is automatically transparent
+                // Set icon styling
                 if (Build.VERSION.SDK_INT >= 30) {
                     insetsController.setAppearanceLightNavigationBars(!lightIcons);
                 }
-                // Note: For Android 35+, apps should draw proper background behind
-                // WindowInsets.Type.navigationBars() instead of setting window colors
+                
+                // Inject CSS to color the navigation bar area in the WebView
+                if (color != null && !color.isEmpty() && webView != null) {
+                    injectNavigationBarBackgroundCSS(color);
+                }
 
             } else if (Build.VERSION.SDK_INT >= 30) {
                 // Android 11-14: Modern approach using WindowInsetsController
@@ -236,6 +275,30 @@ public class SystemBarsManager {
                 }
             }
             // Android < 26: Navigation bar styling not supported
+        });
+    }
+
+    /**
+     * Inject CSS to set navigation bar background color on Android 35+
+     * This creates a fixed div at the bottom with the navigation bar color
+     */
+    private void injectNavigationBarBackgroundCSS(String color) {
+        if (webView == null) return;
+        
+        String javascript = 
+            "(function() {" +
+            "  let navBar = document.getElementById('capacitor-navigation-bar-bg');" +
+            "  if (!navBar) {" +
+            "    navBar = document.createElement('div');" +
+            "    navBar.id = 'capacitor-navigation-bar-bg';" +
+            "    navBar.style.cssText = 'position: fixed; bottom: 0; left: 0; right: 0; height: env(safe-area-inset-bottom); z-index: 9999;';" +
+            "    document.body.appendChild(navBar);" +
+            "  }" +
+            "  navBar.style.backgroundColor = '" + color + "';" +
+            "})();";
+        
+        webView.post(() -> {
+            webView.evaluateJavascript(javascript, null);
         });
     }
 

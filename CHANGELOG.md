@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.6] - 2025-11-19
+
+### Fixed
+
+- **Android 15+ Status Bar Color**: Fixed status bar color not working on Android 35+ after WindowInsets implementation
+  - Now uses CSS injection to set body background color instead of deprecated `setStatusBarColor()`
+  - Applies WindowInsets padding to WebView instead of decor view to allow custom coloring
+  - Status bar and navigation bar colors now work properly on Android 15+
+  - Icon styling (light/dark) still controlled via `WindowInsetsController`
+
+### Technical
+
+- Added `injectStatusBarBackgroundCSS()` method to set background color via JavaScript
+- Added `injectNavigationBarBackgroundCSS()` method for navigation bar coloring
+- Changed WindowInsets listener target from decor view to WebView
+- Added `setWebView()` method to `SystemBarsManager` for WebView reference
+- Properly implements Android 15's edge-to-edge color handling pattern
+
+---
+
 ## [1.2.5] - 2025-11-19
 
 ### Fixed

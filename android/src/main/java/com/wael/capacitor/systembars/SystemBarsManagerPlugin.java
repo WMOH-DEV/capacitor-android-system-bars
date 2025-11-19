@@ -23,6 +23,9 @@ public class SystemBarsManagerPlugin extends Plugin {
         fullscreenManager = new FullscreenManager(getActivity(), systemBarsManager, paddingManager);
         lifecycleHandler = new LifecycleHandler(this);
 
+        // Pass WebView reference to SystemBarsManager for Android 35+ insets handling
+        systemBarsManager.setWebView(bridge.getWebView());
+
         // Auto-initialize based on Android version
         systemBarsManager.initialize();
     }
