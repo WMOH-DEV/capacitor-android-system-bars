@@ -6,6 +6,8 @@ import android.os.Build;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowInsetsController;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
@@ -65,7 +67,35 @@ public class SystemBarsManager {
             // Note: setStatusBarColor() and setNavigationBarColor() are deprecated in Android 15+
             // The system automatically makes bars transparent when edge-to-edge is enabled
             // Apps should draw proper background behind WindowInsets instead
+
+            // Set up WindowInsets listener for proper inset handling (required by Android 15+)
+            setupWindowInsetsListener();
         }
+    }
+
+    /**
+     * Setup WindowInsets listener to properly handle system bar insets
+     * This is required for Android 15+ edge-to-edge compliance
+     * Reference: https://developer.android.com/develop/ui/views/layout/edge-to-edge#kotlin
+     */
+    private void setupWindowInsetsListener() {
+        View decorView = window.getDecorView();
+        ViewCompat.setOnApplyWindowInsetsListener(decorView, (v, windowInsets) -> {
+            // Get system bar insets
+            Insets systemBarsInsets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            
+            // Apply insets as padding to the root view
+            // This ensures content is not hidden behind system bars
+            v.setPadding(
+                systemBarsInsets.left,
+                systemBarsInsets.top,
+                systemBarsInsets.right,
+                systemBarsInsets.bottom
+            );
+            
+            // Return the insets to allow other views to handle them
+            return WindowInsetsCompat.CONSUMED;
+        });
     }
 
     /**

@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.5] - 2025-11-19
+
+### Fixed
+
+- **Android 15+ Edge-to-Edge Compliance**: Added proper WindowInsets listener to handle system bar insets
+  - Implements `ViewCompat.setOnApplyWindowInsetsListener()` for Android 35+
+  - Ensures content is not hidden behind system bars
+  - Fixes Google Play Console warning: "Edge-to-edge may not display for all users"
+  - Complies with Android 15's edge-to-edge requirements
+
+### Enhanced
+
+- **Insets Handling**: Proper padding application based on system bar insets
+- **Edge-to-Edge Support**: Full compliance with Android 15+ edge-to-edge guidelines
+
+### Technical
+
+- Added `setupWindowInsetsListener()` method in `SystemBarsManager.java`
+- Imported `androidx.core.graphics.Insets` and `androidx.core.view.ViewCompat`
+- System bars insets now properly applied to root view
+
+---
+
 ## [1.2.4] - 2025-11-19
 
 ### Fixed
