@@ -125,12 +125,12 @@ export interface InitializeResult {
   supportsWindowInsets: boolean;
 
   /**
-   * Status bar height in pixels
+   * Status bar height in dp (CSS pixels)
    */
   statusBarHeight: number;
 
   /**
-   * Navigation bar height in pixels
+   * Navigation bar height in dp (CSS pixels)
    */
   navigationBarHeight: number;
 }

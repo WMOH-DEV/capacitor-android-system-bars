@@ -2,23 +2,43 @@ package com.wael.capacitor.systembars;
 
 import android.app.Activity;
 import android.os.Build;
+import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup.MarginLayoutParams;
 import android.view.Window;
+import android.webkit.WebView;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
 /**
- * FullscreenManager - Handles immersive fullscreen mode across all Android
- * versions
- * Reference: https://developer.android.com/training/system-ui/immersive
+ * FullscreenManager - Handles immersive fullscreen mode across all Android versions
+ *
+ * Android 35+ KEY DESIGN:
+ * Capacitor's adjustMarginsForEdgeToEdge="auto" sets a WindowInsets listener that
+ * applies margins from systemBars + displayCutout. During fullscreen:
+ * - systemBars insets become 0 (bars hidden)
+ * - BUT displayCutout insets REMAIN (physical notch doesn't disappear)
+ * - So Capacitor's listener would still apply top margin for the notch
+ *
+ * FIX: We temporarily REPLACE Capacitor's listener with our own that zeros
+ * all margins during fullscreen. On exit, we restore Capacitor's original
+ * listener behavior and request a new insets dispatch.
  */
 public class FullscreenManager {
+
+    private static final String TAG = "FullscreenManager";
 
     private final Activity activity;
     private final SystemBarsManager systemBarsManager;
     private final WebViewPaddingManager paddingManager;
     private final Window window;
+    private WebView webView;
+
+    private volatile boolean isFullscreenActive = false;
+    private volatile String currentFullscreenMode = "IMMERSIVE";
 
     public FullscreenManager(
             Activity activity,
@@ -31,24 +51,40 @@ public class FullscreenManager {
     }
 
     /**
+     * Set WebView reference for Android 35+ margin management
+     */
+    public void setWebView(WebView webView) {
+        this.webView = webView;
+    }
+
+    /**
      * Enter fullscreen mode
-     * 
+     *
      * @param mode "IMMERSIVE" or "LEAN"
      */
     public void enterFullscreen(String mode) {
         activity.runOnUiThread(() -> {
-            // Set fullscreen state
             isFullscreenActive = true;
-            currentFullscreenMode = mode; // Store the mode
+            currentFullscreenMode = mode;
 
-            // Remove webview padding
-            paddingManager.removePadding();
+            // Update visibility tracking
+            systemBarsManager.setBarVisibility(false, false);
 
             View decorView = window.getDecorView();
 
             if (Build.VERSION.SDK_INT >= 30) {
-                // Modern approach using WindowInsetsController
-                WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, decorView);
+                WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window,
+                        decorView);
+
+                if (Build.VERSION.SDK_INT >= 35 && webView != null) {
+                    // CRITICAL: Replace Capacitor's margin listener with one that
+                    // zeros all margins. This prevents the displayCutout insets
+                    // from keeping a top margin during fullscreen.
+                    installFullscreenInsetsListener();
+                } else if (Build.VERSION.SDK_INT < 35) {
+                    // Android 30-34: Remove WebView padding manually
+                    paddingManager.removePadding();
+                }
 
                 controller.hide(WindowInsetsCompat.Type.systemBars());
 
@@ -56,12 +92,15 @@ public class FullscreenManager {
                     controller.setSystemBarsBehavior(
                             WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
                 } else {
-                    // Lean mode
                     controller.setSystemBarsBehavior(
                             WindowInsetsControllerCompat.BEHAVIOR_DEFAULT);
                 }
+
+                Log.d(TAG, "Entered fullscreen (modern): mode=" + mode);
             } else {
-                // Legacy System UI flags
+                // Legacy: remove padding + set system UI flags
+                paddingManager.removePadding();
+
                 int flags = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                         | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
@@ -71,112 +110,101 @@ public class FullscreenManager {
                 if (mode.equals("IMMERSIVE")) {
                     flags |= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
                 } else {
-                    // Lean mode - hide on interaction
                     flags |= View.SYSTEM_UI_FLAG_IMMERSIVE;
                 }
 
                 decorView.setSystemUiVisibility(flags);
+                Log.d(TAG, "Entered fullscreen (legacy): mode=" + mode);
             }
         });
     }
 
     /**
-     * Exit fullscreen and restore normal state
+     * Install a fullscreen insets listener that zeros all margins.
+     * Replaces Capacitor's edge-to-edge margin listener temporarily.
+     */
+    private void installFullscreenInsetsListener() {
+        if (webView == null) return;
+
+        ViewCompat.setOnApplyWindowInsetsListener(webView, (v, windowInsets) -> {
+            // During fullscreen: force all margins to 0
+            if (v.getLayoutParams() instanceof MarginLayoutParams) {
+                MarginLayoutParams mlp = (MarginLayoutParams) v.getLayoutParams();
+                if (mlp.leftMargin != 0 || mlp.topMargin != 0
+                        || mlp.rightMargin != 0 || mlp.bottomMargin != 0) {
+                    mlp.setMargins(0, 0, 0, 0);
+                    v.setLayoutParams(mlp);
+                }
+            }
+            return WindowInsetsCompat.CONSUMED;
+        });
+
+        // Trigger a new insets dispatch to apply our zero-margin listener
+        ViewCompat.requestApplyInsets(webView);
+    }
+
+    /**
+     * Restore Capacitor's edge-to-edge margin listener.
+     * Replicates the logic from CapacitorWebView.edgeToEdgeHandler().
+     */
+    private void restoreCapacitorInsetsListener() {
+        if (webView == null) return;
+
+        ViewCompat.setOnApplyWindowInsetsListener(webView, (v, windowInsets) -> {
+            Insets insets = windowInsets.getInsets(
+                    WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
+            if (v.getLayoutParams() instanceof MarginLayoutParams) {
+                MarginLayoutParams mlp = (MarginLayoutParams) v.getLayoutParams();
+                mlp.leftMargin = insets.left;
+                mlp.bottomMargin = insets.bottom;
+                mlp.rightMargin = insets.right;
+                mlp.topMargin = insets.top;
+                v.setLayoutParams(mlp);
+            }
+            return WindowInsetsCompat.CONSUMED;
+        });
+
+        // Trigger a new insets dispatch so margins are restored with real values
+        ViewCompat.requestApplyInsets(webView);
+        Log.d(TAG, "Restored Capacitor's edge-to-edge margin listener");
+    }
+
+    /**
+     * Exit fullscreen and restore normal state (applies same style to both bars)
      */
     public void exitFullscreen(String style, String color) {
-        activity.runOnUiThread(() -> {
-            View decorView = window.getDecorView();
-
-            if (Build.VERSION.SDK_INT >= 35) {
-                // Android 35+: Use modern WindowInsetsController
-                WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, decorView);
-
-                controller.show(WindowInsetsCompat.Type.systemBars());
-                controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_DEFAULT);
-
-                // Restore edge-to-edge mode
-                systemBarsManager.reapplySystemUI();
-
-            } else if (Build.VERSION.SDK_INT >= 30) {
-                // Android 30-34: Use WindowInsetsController but apply padding
-                WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, decorView);
-
-                controller.show(WindowInsetsCompat.Type.systemBars());
-                controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_DEFAULT);
-
-                // CRITICAL: Apply padding after system bars are shown
-                decorView.post(() -> {
-                    paddingManager.applyPadding();
-                });
-
-            } else {
-                // Android < 30: Legacy System UI flags
-                int flags = decorView.getSystemUiVisibility();
-
-                // Clear all fullscreen flags
-                flags &= ~(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_IMMERSIVE
-                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
-
-                // Restore stable layout flags
-                flags |= View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
-
-                decorView.setSystemUiVisibility(flags);
-
-                // CRITICAL: Apply padding after layout flags are set
-                decorView.post(() -> {
-                    paddingManager.applyPadding();
-                });
-            }
-
-            // Reset fullscreen state
-            isFullscreenActive = false;
-
-            // Restore status bar style and color with a slight delay
-            decorView.postDelayed(() -> {
-                systemBarsManager.setStatusBarStyle(style, color);
-            }, 50);
-        });
+        exitFullscreen(style, color, style, color);
     }
 
     /**
-     * Exit fullscreen and restore both status and navigation bars with individual
-     * styles
+     * Exit fullscreen and restore both status and navigation bars with
+     * individual styles.
      */
     public void exitFullscreen(String statusStyle, String statusColor, String navStyle, String navColor) {
         activity.runOnUiThread(() -> {
             View decorView = window.getDecorView();
 
-            if (Build.VERSION.SDK_INT >= 35) {
-                // Android 35+: Use modern WindowInsetsController
-                WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, decorView);
+            if (Build.VERSION.SDK_INT >= 30) {
+                WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window,
+                        decorView);
 
                 controller.show(WindowInsetsCompat.Type.systemBars());
-                controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_DEFAULT);
+                controller.setSystemBarsBehavior(
+                        WindowInsetsControllerCompat.BEHAVIOR_DEFAULT);
 
-                // Restore edge-to-edge mode
-                systemBarsManager.reapplySystemUI();
-
-            } else if (Build.VERSION.SDK_INT >= 30) {
-                // Android 30-34: Use WindowInsetsController but apply padding
-                WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, decorView);
-
-                controller.show(WindowInsetsCompat.Type.systemBars());
-                controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_DEFAULT);
-
-                // CRITICAL: Apply padding after system bars are shown
-                decorView.post(() -> {
-                    paddingManager.applyPadding();
-                });
+                if (Build.VERSION.SDK_INT >= 35 && webView != null) {
+                    // Restore Capacitor's margin listener so margins come back
+                    restoreCapacitorInsetsListener();
+                    // Re-apply system UI state (colors, icon styles)
+                    systemBarsManager.reapplySystemUI();
+                } else {
+                    // Android 30-34: Re-apply padding
+                    decorView.post(() -> paddingManager.applyPadding());
+                }
 
             } else {
-                // Android < 30: Legacy System UI flags
                 int flags = decorView.getSystemUiVisibility();
 
-                // Clear all fullscreen flags
                 flags &= ~(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_FULLSCREEN
                         | View.SYSTEM_UI_FLAG_IMMERSIVE
@@ -184,22 +212,21 @@ public class FullscreenManager {
                         | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                         | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
 
-                // Restore stable layout flags
                 flags |= View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
-
                 decorView.setSystemUiVisibility(flags);
-
-                // CRITICAL: Apply padding after layout flags are set
-                decorView.post(() -> {
-                    paddingManager.applyPadding();
-                });
+                decorView.post(() -> paddingManager.applyPadding());
             }
 
-            // Reset fullscreen state
             isFullscreenActive = false;
 
-            // Restore both status and navigation bar styles with a slight delay
+            // Update visibility tracking
+            systemBarsManager.setBarVisibility(true, true);
+
+            // Restore bar styles with a slight delay for UI to settle.
+            // Guard: skip if fullscreen was re-entered during the delay.
             decorView.postDelayed(() -> {
+                if (isFullscreenActive) return; // Rapid re-enter guard
+
                 if (statusStyle != null || statusColor != null) {
                     systemBarsManager.setStatusBarStyle(
                             statusStyle != null ? statusStyle : "DEFAULT",
@@ -211,6 +238,8 @@ public class FullscreenManager {
                             navColor);
                 }
             }, 50);
+
+            Log.d(TAG, "Exited fullscreen");
         });
     }
 
@@ -221,21 +250,10 @@ public class FullscreenManager {
         exitFullscreen("DEFAULT", null, "DEFAULT", null);
     }
 
-    // === NEW FULLSCREEN STATE TRACKING ===
-
-    private boolean isFullscreenActive = false;
-    private String currentFullscreenMode = "IMMERSIVE"; // Track current mode
-
-    /**
-     * Check if fullscreen mode is currently active
-     */
     public boolean isFullscreenActive() {
         return isFullscreenActive;
     }
 
-    /**
-     * Get the current fullscreen mode
-     */
     public String getCurrentFullscreenMode() {
         return currentFullscreenMode;
     }
@@ -247,33 +265,37 @@ public class FullscreenManager {
         activity.runOnUiThread(() -> {
             View decorView = window.getDecorView();
 
-            // Force clear all possible fullscreen flags
             decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
 
             if (Build.VERSION.SDK_INT >= 30) {
-                WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, decorView);
+                WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window,
+                        decorView);
                 controller.show(WindowInsetsCompat.Type.systemBars());
-                controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_DEFAULT);
+                controller.setSystemBarsBehavior(
+                        WindowInsetsControllerCompat.BEHAVIOR_DEFAULT);
             }
 
-            // Force restore padding
-            paddingManager.applyPadding();
+            if (Build.VERSION.SDK_INT >= 35 && webView != null) {
+                restoreCapacitorInsetsListener();
+                systemBarsManager.reapplySystemUI();
+            } else {
+                paddingManager.applyPadding();
+            }
 
-            // Reset state
             isFullscreenActive = false;
-            currentFullscreenMode = "IMMERSIVE"; // Reset to default
+            currentFullscreenMode = "IMMERSIVE";
 
-            // Restore system bars to default
             decorView.postDelayed(() -> {
                 systemBarsManager.setStatusBarStyle("DEFAULT", null);
                 systemBarsManager.setNavigationBarStyle("DEFAULT", null);
             }, 100);
+
+            Log.d(TAG, "Force exited fullscreen");
         });
     }
 
     /**
-     * Re-apply fullscreen mode after resume/screen unlock
-     * CRITICAL: System events can reset system UI flags
+     * Re-apply fullscreen mode after resume/screen unlock.
      */
     public void reapplyFullscreenIfActive() {
         if (isFullscreenActive) {
@@ -281,8 +303,16 @@ public class FullscreenManager {
                 View decorView = window.getDecorView();
 
                 if (Build.VERSION.SDK_INT >= 30) {
-                    // Modern approach using WindowInsetsController
-                    WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, decorView);
+                    WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window,
+                            decorView);
+
+                    // Re-install fullscreen listener on 35+
+                    if (Build.VERSION.SDK_INT >= 35 && webView != null) {
+                        installFullscreenInsetsListener();
+                    } else if (Build.VERSION.SDK_INT < 35) {
+                        // Android 30-34: Remove WebView padding
+                        paddingManager.removePadding();
+                    }
 
                     controller.hide(WindowInsetsCompat.Type.systemBars());
 
@@ -294,7 +324,6 @@ public class FullscreenManager {
                                 WindowInsetsControllerCompat.BEHAVIOR_DEFAULT);
                     }
                 } else {
-                    // Legacy System UI flags
                     int flags = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                             | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                             | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
@@ -308,10 +337,10 @@ public class FullscreenManager {
                     }
 
                     decorView.setSystemUiVisibility(flags);
+                    paddingManager.removePadding();
                 }
 
-                // Ensure webview padding is removed
-                paddingManager.removePadding();
+                Log.d(TAG, "Re-applied fullscreen after resume");
             });
         }
     }

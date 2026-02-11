@@ -3,18 +3,19 @@ package com.wael.capacitor.systembars;
 import android.content.res.Resources;
 import android.os.Build;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.webkit.WebView;
 
 /**
- * WebViewPaddingManager - Manages webview padding for Android < 35
- * 
- * CRITICAL: On Android < 35, we MUST manually add top padding to the webview
- * to prevent content from being hidden under the status bar.
+ * WebViewPaddingManager - Manages WebView padding for Android < 35 ONLY.
  *
- * This is necessary because we CANNOT use overlay mode on Android < 35
- * without causing resize conflicts with keyboard and system events.
+ * On Android < 35: Top padding pushes content below the status bar overlay.
+ * On Android 35+: Capacitor's adjustMarginsForEdgeToEdge="auto" handles
+ *   spacing via WebView margins. No padding needed from us.
  */
 public class WebViewPaddingManager {
+
+    private static final String TAG = "WebViewPaddingManager";
 
     private final WebView webView;
     private int statusBarHeight = 0;
@@ -24,11 +25,11 @@ public class WebViewPaddingManager {
         this.webView = webView;
         this.statusBarHeight = calculateStatusBarHeight();
         this.navigationBarHeight = calculateNavigationBarHeight();
+
+        Log.d(TAG, "Calculated bar heights: statusBar=" + statusBarHeight
+                + "px, navigationBar=" + navigationBarHeight + "px");
     }
 
-    /**
-     * Calculate status bar height in pixels
-     */
     private int calculateStatusBarHeight() {
         Resources resources = webView.getResources();
         int resourceId = resources.getIdentifier("status_bar_height", "dimen", "android");
@@ -37,14 +38,10 @@ public class WebViewPaddingManager {
             return resources.getDimensionPixelSize(resourceId);
         }
 
-        // Fallback: 24dp converted to pixels
         DisplayMetrics metrics = resources.getDisplayMetrics();
         return (int) (24 * metrics.density);
     }
 
-    /**
-     * Calculate navigation bar height in pixels
-     */
     private int calculateNavigationBarHeight() {
         Resources resources = webView.getResources();
         int resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android");
@@ -53,59 +50,51 @@ public class WebViewPaddingManager {
             return resources.getDimensionPixelSize(resourceId);
         }
 
-        // Fallback: 48dp converted to pixels
         DisplayMetrics metrics = resources.getDisplayMetrics();
         return (int) (48 * metrics.density);
     }
 
     /**
-     * Apply top padding to webview (Android < 35 only)
+     * Apply padding to WebView.
+     * Android 35+: No-op (Capacitor handles margins).
+     * Android < 35: Top-only padding for status bar overlay.
      */
     public void applyPadding() {
-        if (Build.VERSION.SDK_INT < 35) {
-            webView.post(() -> {
-                // CRITICAL: Force layout update after padding change
-                webView.setPadding(0, statusBarHeight, 0, 0);
-                webView.requestLayout();
-                webView.invalidate();
-            });
+        if (Build.VERSION.SDK_INT >= 35) {
+            Log.d(TAG, "Android 35+: Skipping padding (Capacitor margins handle spacing)");
+            return;
         }
+
+        webView.post(() -> {
+            Log.d(TAG, "Applying legacy padding: top=" + statusBarHeight);
+            webView.setPadding(0, statusBarHeight, 0, 0);
+            webView.requestLayout();
+            webView.invalidate();
+        });
     }
 
     /**
-     * Remove padding (for fullscreen mode)
+     * Remove padding (for fullscreen mode).
+     * Android 35+: No-op (Capacitor handles margins).
      */
     public void removePadding() {
+        if (Build.VERSION.SDK_INT >= 35) {
+            Log.d(TAG, "Android 35+: Skipping removePadding (Capacitor margins handle spacing)");
+            return;
+        }
+
         webView.post(() -> {
-            // CRITICAL: Force layout update after padding removal
+            Log.d(TAG, "Removing all padding");
             webView.setPadding(0, 0, 0, 0);
             webView.requestLayout();
             webView.invalidate();
         });
     }
 
-    /**
-     * Set custom padding
-     */
-    public void setPadding(int top, int bottom) {
-        webView.post(() -> {
-            // CRITICAL: Force layout update after padding change
-            webView.setPadding(0, top, 0, bottom);
-            webView.requestLayout();
-            webView.invalidate();
-        });
-    }
-
-    /**
-     * Get status bar height
-     */
     public int getStatusBarHeight() {
         return statusBarHeight;
     }
 
-    /**
-     * Get navigation bar height
-     */
     public int getNavigationBarHeight() {
         return navigationBarHeight;
     }

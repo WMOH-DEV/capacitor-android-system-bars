@@ -606,8 +606,8 @@ show() => Promise<void>
 | **`isAndroid35Plus`**      | <code>boolean</code> | Whether device is running Android 35+         |
 | **`supportsEdgeToEdge`**   | <code>boolean</code> | Whether device supports edge-to-edge natively |
 | **`supportsWindowInsets`** | <code>boolean</code> | Whether device supports WindowInsets API      |
-| **`statusBarHeight`**      | <code>number</code>  | Status bar height in pixels                   |
-| **`navigationBarHeight`**  | <code>number</code>  | Navigation bar height in pixels               |
+| **`statusBarHeight`**      | <code>number</code>  | Status bar height in dp (CSS pixels)          |
+| **`navigationBarHeight`**  | <code>number</code>  | Navigation bar height in dp (CSS pixels)      |
 
 
 #### SetSystemBarsStyleOptions

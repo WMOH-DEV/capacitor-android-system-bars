@@ -23,11 +23,15 @@ public class SystemBarsManagerPlugin extends Plugin {
         fullscreenManager = new FullscreenManager(getActivity(), systemBarsManager, paddingManager);
         lifecycleHandler = new LifecycleHandler(this);
 
-        // Pass WebView reference to SystemBarsManager for Android 35+ insets handling
-        systemBarsManager.setWebView(bridge.getWebView());
+        // Pass WebView reference to FullscreenManager for Android 35+ margin control
+        fullscreenManager.setWebView(bridge.getWebView());
 
-        // Auto-initialize based on Android version
+        // Initialize system bars (edge-to-edge on 35+, legacy on < 35)
         systemBarsManager.initialize();
+
+        // Apply WebView padding for Android < 35 only
+        // (Android 35+: Capacitor's adjustMarginsForEdgeToEdge="auto" handles spacing)
+        paddingManager.applyPadding();
     }
 
     @PluginMethod
@@ -41,8 +45,10 @@ public class SystemBarsManagerPlugin extends Plugin {
             result.put("isAndroid35Plus", isAndroid35Plus);
             result.put("supportsEdgeToEdge", apiLevel >= 35);
             result.put("supportsWindowInsets", apiLevel >= 30);
-            result.put("statusBarHeight", paddingManager.getStatusBarHeight());
-            result.put("navigationBarHeight", paddingManager.getNavigationBarHeight());
+            // Return heights in dp (CSS px), not physical px
+            float density = getActivity().getResources().getDisplayMetrics().density;
+            result.put("statusBarHeight", Math.round(paddingManager.getStatusBarHeight() / density));
+            result.put("navigationBarHeight", Math.round(paddingManager.getNavigationBarHeight() / density));
 
             call.resolve(result);
         } catch (Exception e) {
@@ -176,15 +182,12 @@ public class SystemBarsManagerPlugin extends Plugin {
 
     @PluginMethod
     public void setOverlay(PluginCall call) {
-        boolean overlay = Boolean.TRUE.equals(call.getBoolean("overlay", false));
-
+        // setOverlay is now a no-op — edge-to-edge is handled by initialize().
+        // Kept for API backward compatibility so existing JS code doesn't break.
         try {
-            if (Build.VERSION.SDK_INT >= 35) {
-                systemBarsManager.setOverlayMode(overlay);
-                call.resolve();
-            } else {
-                call.reject("Overlay mode only supported on Android 35+");
-            }
+            systemBarsManager.setOverlayMode(
+                    Boolean.TRUE.equals(call.getBoolean("overlay", false)));
+            call.resolve();
         } catch (Exception e) {
             call.reject("Failed to set overlay mode", e);
         }
@@ -238,31 +241,25 @@ public class SystemBarsManagerPlugin extends Plugin {
     @PluginMethod
     public void setSystemBarsStyle(PluginCall call) {
         try {
-            JSObject options = call.getObject("options", new JSObject());
-
             // Handle shorthand style/color (applies to both bars)
             String globalStyle = call.getString("style");
             String globalColor = call.getString("color");
 
             // Handle individual bar configurations
+            // Read directly from call data (Capacitor bridges the argument object as call data)
             JSObject statusBarConfig = null;
             JSObject navigationBarConfig = null;
 
-            assert options != null;
-            if (options.has("statusBar")) {
-                try {
-                    statusBarConfig = options.getJSObject("statusBar");
-                } catch (Exception e) {
-                    // Handle if statusBar is not a JSObject
-                }
+            try {
+                statusBarConfig = call.getObject("statusBar");
+            } catch (Exception e) {
+                // Not provided or not a JSObject
             }
 
-            if (options.has("navigationBar")) {
-                try {
-                    navigationBarConfig = options.getJSObject("navigationBar");
-                } catch (Exception e) {
-                    // Handle if navigationBar is not a JSObject
-                }
+            try {
+                navigationBarConfig = call.getObject("navigationBar");
+            } catch (Exception e) {
+                // Not provided or not a JSObject
             }
 
             // Determine final configurations
