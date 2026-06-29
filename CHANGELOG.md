@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.2] - 2026-06-29
+
+### Fixed
+
+- **Android 15+ deprecated API regression**: Removed `setStatusBarColor(TRANSPARENT)` and `setNavigationBarColor(TRANSPARENT)` from `initializeEdgeToEdge()` (the Android 35+ path). These were deprecated no-ops on API 35+ — the system already enforces transparent bars once `setDecorFitsSystemWindows(false)` is declared, and bar colors are drawn by the native Views in `setupBarBackgroundViews()`. Their only effect was re-triggering the Google Play Console "uses deprecated APIs for edge-to-edge" warning.
+  - This reverts an accidental reintroduction in 1.3.0. The same calls had been removed in 1.2.4, but the 1.3.0 "native bar color views" rewrite added them back without intent (the 1.3.0 commit message even states "remove all deprecated usage").
+  - No behavior change: the calls only ran on SDK ≥ 35, where they did nothing.
+  - The version-guarded `setStatusBarColor`/`setNavigationBarColor` calls on API < 35 are unchanged — they are valid on those OS versions and are not subject to the Android 15 deprecation. This mirrors AndroidX `enableEdgeToEdge()`, which guards the same setters to `< 35`.
+
+### Note
+
+- Changelog entries for 1.3.0 (native bar color Views, Capacitor edge-to-edge margin compat, fullscreen margin control) and 1.3.1 (version bump) were not recorded at release time; see commits `183bf12` and `00e9e70`.
+
 ## [1.2.6] - 2025-11-19
 
 ### Fixed

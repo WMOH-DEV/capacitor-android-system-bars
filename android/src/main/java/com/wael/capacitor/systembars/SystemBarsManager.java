@@ -88,7 +88,10 @@ public class SystemBarsManager {
      * sets WebView margins via its own WindowInsets listener on 35+. We just need to:
      * 1. Ensure edge-to-edge is declared (setDecorFitsSystemWindows)
      * 2. Set BEHAVIOR_DEFAULT so bars are permanent and report correct insets
-     * 3. Set transparent bar colors at the Window level (enforced on 35+ anyway)
+     *
+     * Bars are transparent automatically once edge-to-edge is declared; colors
+     * come from setupBarBackgroundViews(). Do not call setStatusBarColor/
+     * setNavigationBarColor here — deprecated no-ops on 35+ that Google Play flags.
      */
     private void initializeEdgeToEdge() {
         WindowCompat.setDecorFitsSystemWindows(window, false);
@@ -96,10 +99,6 @@ public class SystemBarsManager {
         insetsController.setSystemBarsBehavior(
                 WindowInsetsControllerCompat.BEHAVIOR_DEFAULT);
 
-        window.setStatusBarColor(Color.TRANSPARENT);
-        window.setNavigationBarColor(Color.TRANSPARENT);
-
-        // Create per-bar colored Views behind the WebView
         setupBarBackgroundViews();
 
         Log.d(TAG, "Edge-to-edge initialized. Capacitor handles margins, we handle colors.");
