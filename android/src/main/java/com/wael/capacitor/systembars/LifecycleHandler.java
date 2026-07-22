@@ -7,7 +7,7 @@ import android.util.Log;
  * LifecycleHandler - Handles app lifecycle events to re-apply system UI state
  *
  * Android 35+: Re-applies window background color and icon styles.
- *   Capacitor's margin listener auto-handles spacing.
+ *   The plugin's base inset listener handles spacing.
  * Android < 35: Re-applies padding + legacy colors.
  */
 public class LifecycleHandler {

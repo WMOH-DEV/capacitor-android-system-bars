@@ -14,18 +14,12 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
 /**
- * FullscreenManager - Handles immersive fullscreen mode across all Android versions
+ * FullscreenManager — immersive fullscreen across all Android versions.
  *
- * Android 35+ KEY DESIGN:
- * Capacitor's adjustMarginsForEdgeToEdge="auto" sets a WindowInsets listener that
- * applies margins from systemBars + displayCutout. During fullscreen:
- * - systemBars insets become 0 (bars hidden)
- * - BUT displayCutout insets REMAIN (physical notch doesn't disappear)
- * - So Capacitor's listener would still apply top margin for the notch
- *
- * FIX: We temporarily REPLACE Capacitor's listener with our own that zeros
- * all margins during fullscreen. On exit, we restore Capacitor's original
- * listener behavior and request a new insets dispatch.
+ * On API 35+ the plugin owns window insets (the app sets SystemBars.insetsHandling='disable',
+ * so Capacitor attaches no listener). installBaseInsetsListener() applies systemBars +
+ * displayCutout as WebView margins; entering fullscreen swaps in a zero-margin listener and
+ * exiting restores the base listener.
  */
 public class FullscreenManager {
 
@@ -77,9 +71,6 @@ public class FullscreenManager {
                         decorView);
 
                 if (Build.VERSION.SDK_INT >= 35 && webView != null) {
-                    // CRITICAL: Replace Capacitor's margin listener with one that
-                    // zeros all margins. This prevents the displayCutout insets
-                    // from keeping a top margin during fullscreen.
                     installFullscreenInsetsListener();
                 } else if (Build.VERSION.SDK_INT < 35) {
                     // Android 30-34: Remove WebView padding manually
@@ -120,14 +111,21 @@ public class FullscreenManager {
     }
 
     /**
-     * Install a fullscreen insets listener that zeros all margins.
-     * Replaces Capacitor's edge-to-edge margin listener temporarily.
+     * Zero-margin listener used during fullscreen; overrides the base listener.
      */
     private void installFullscreenInsetsListener() {
         if (webView == null) return;
 
+        if (webView.getLayoutParams() instanceof MarginLayoutParams) {
+            MarginLayoutParams mlp = (MarginLayoutParams) webView.getLayoutParams();
+            if (mlp.leftMargin != 0 || mlp.topMargin != 0
+                    || mlp.rightMargin != 0 || mlp.bottomMargin != 0) {
+                mlp.setMargins(0, 0, 0, 0);
+                webView.setLayoutParams(mlp);
+            }
+        }
+
         ViewCompat.setOnApplyWindowInsetsListener(webView, (v, windowInsets) -> {
-            // During fullscreen: force all margins to 0
             if (v.getLayoutParams() instanceof MarginLayoutParams) {
                 MarginLayoutParams mlp = (MarginLayoutParams) v.getLayoutParams();
                 if (mlp.leftMargin != 0 || mlp.topMargin != 0
@@ -139,15 +137,14 @@ public class FullscreenManager {
             return WindowInsetsCompat.CONSUMED;
         });
 
-        // Trigger a new insets dispatch to apply our zero-margin listener
         ViewCompat.requestApplyInsets(webView);
     }
 
     /**
-     * Restore Capacitor's edge-to-edge margin listener.
-     * Replicates the logic from CapacitorWebView.edgeToEdgeHandler().
+     * Base inset listener: applies systemBars + displayCutout as WebView margins.
+     * On API 35+ the plugin owns this because the app sets SystemBars.insetsHandling='disable'.
      */
-    private void restoreCapacitorInsetsListener() {
+    public void installBaseInsetsListener() {
         if (webView == null) return;
 
         ViewCompat.setOnApplyWindowInsetsListener(webView, (v, windowInsets) -> {
@@ -164,9 +161,7 @@ public class FullscreenManager {
             return WindowInsetsCompat.CONSUMED;
         });
 
-        // Trigger a new insets dispatch so margins are restored with real values
         ViewCompat.requestApplyInsets(webView);
-        Log.d(TAG, "Restored Capacitor's edge-to-edge margin listener");
     }
 
     /**
@@ -193,9 +188,7 @@ public class FullscreenManager {
                         WindowInsetsControllerCompat.BEHAVIOR_DEFAULT);
 
                 if (Build.VERSION.SDK_INT >= 35 && webView != null) {
-                    // Restore Capacitor's margin listener so margins come back
-                    restoreCapacitorInsetsListener();
-                    // Re-apply system UI state (colors, icon styles)
+                    installBaseInsetsListener();
                     systemBarsManager.reapplySystemUI();
                 } else {
                     // Android 30-34: Re-apply padding
@@ -221,6 +214,17 @@ public class FullscreenManager {
 
             // Update visibility tracking
             systemBarsManager.setBarVisibility(true, true);
+
+            if (statusStyle != null || statusColor != null) {
+                systemBarsManager.setStatusBarStyle(
+                        statusStyle != null ? statusStyle : "DEFAULT",
+                        statusColor);
+            }
+            if (navStyle != null || navColor != null) {
+                systemBarsManager.setNavigationBarStyle(
+                        navStyle != null ? navStyle : "DEFAULT",
+                        navColor);
+            }
 
             // Restore bar styles with a slight delay for UI to settle.
             // Guard: skip if fullscreen was re-entered during the delay.
@@ -265,18 +269,18 @@ public class FullscreenManager {
         activity.runOnUiThread(() -> {
             View decorView = window.getDecorView();
 
-            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
-
             if (Build.VERSION.SDK_INT >= 30) {
                 WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window,
                         decorView);
                 controller.show(WindowInsetsCompat.Type.systemBars());
                 controller.setSystemBarsBehavior(
                         WindowInsetsControllerCompat.BEHAVIOR_DEFAULT);
+            } else {
+                decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
             }
 
             if (Build.VERSION.SDK_INT >= 35 && webView != null) {
-                restoreCapacitorInsetsListener();
+                installBaseInsetsListener();
                 systemBarsManager.reapplySystemUI();
             } else {
                 paddingManager.applyPadding();

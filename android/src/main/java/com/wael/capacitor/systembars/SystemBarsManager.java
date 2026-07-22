@@ -2,6 +2,7 @@ package com.wael.capacitor.systembars;
 
 import android.app.Activity;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.util.Log;
 import android.view.Gravity;
@@ -17,14 +18,13 @@ import androidx.core.view.WindowInsetsControllerCompat;
 import com.getcapacitor.JSObject;
 
 /**
- * SystemBarsManager - Core system UI control for Android API 21-35+
+ * SystemBarsManager - Core system UI control for Android API 21-36+
  *
  * ARCHITECTURE (Android 35+):
- * - Capacitor's adjustMarginsForEdgeToEdge="auto" handles spacing via WebView margins
- * - This plugin handles ONLY: icon appearance (light/dark) + per-bar background color
+ * - The plugin's base inset listener (FullscreenManager) applies WebView margins
+ * - This class handles ONLY: icon appearance (light/dark) + per-bar background color
  * - Per-bar colors use two Views (status bar bg + nav bar bg) inserted behind the WebView
  *   in android.R.id.content, sized by WindowInsets. Supports different colors per bar.
- * - No CSS injection, no WebView padding needed
  *
  * ARCHITECTURE (Android < 35):
  * - Native setStatusBarColor()/setNavigationBarColor() for colors
@@ -84,9 +84,9 @@ public class SystemBarsManager {
     /**
      * Android 35+ initialization.
      *
-     * Edge-to-edge is enforced by the system. Capacitor's adjustMarginsForEdgeToEdge="auto"
-     * sets WebView margins via its own WindowInsets listener on 35+. We just need to:
-     * 1. Ensure edge-to-edge is declared (setDecorFitsSystemWindows)
+     * Edge-to-edge is enforced by the system; the plugin's base inset listener applies
+     * WebView margins. Here we just:
+     * 1. Declare edge-to-edge (setDecorFitsSystemWindows)
      * 2. Set BEHAVIOR_DEFAULT so bars are permanent and report correct insets
      *
      * Bars are transparent automatically once edge-to-edge is declared; colors
@@ -101,7 +101,7 @@ public class SystemBarsManager {
 
         setupBarBackgroundViews();
 
-        Log.d(TAG, "Edge-to-edge initialized. Capacitor handles margins, we handle colors.");
+        Log.d(TAG, "Edge-to-edge initialized.");
     }
 
     /**
@@ -119,7 +119,7 @@ public class SystemBarsManager {
      *
      * Views are inserted at indices 0 and 1 in android.R.id.content so they sit
      * BEHIND the WebView. During normal operation, the WebView has margins
-     * (from Capacitor edge-to-edge) and the colored views show through.
+     * (from the plugin's base inset listener) and the colored views show through.
      * During fullscreen, the WebView margins are zeroed and it covers these views.
      */
     private void setupBarBackgroundViews() {
@@ -219,7 +219,9 @@ public class SystemBarsManager {
 
                 if (color != null && !color.isEmpty()) {
                     try {
-                        window.setStatusBarColor(Color.parseColor(color));
+                        int parsedStatusColor = Color.parseColor(color);
+                        window.setStatusBarColor(parsedStatusColor);
+                        window.setBackgroundDrawable(new ColorDrawable(parsedStatusColor));
                     } catch (IllegalArgumentException e) {
                         Log.w(TAG, "Invalid status bar color: " + color);
                     }
@@ -239,7 +241,9 @@ public class SystemBarsManager {
 
                 if (color != null && !color.isEmpty()) {
                     try {
-                        window.setStatusBarColor(Color.parseColor(color));
+                        int parsedStatusColor = Color.parseColor(color);
+                        window.setStatusBarColor(parsedStatusColor);
+                        window.setBackgroundDrawable(new ColorDrawable(parsedStatusColor));
                     } catch (IllegalArgumentException e) {
                         Log.w(TAG, "Invalid status bar color: " + color);
                     }
@@ -358,7 +362,7 @@ public class SystemBarsManager {
      * Set overlay mode — safe no-op.
      */
     public void setOverlayMode(boolean overlay) {
-        Log.d(TAG, "setOverlayMode(" + overlay + ") - no-op, handled by Capacitor config");
+        Log.d(TAG, "setOverlayMode(" + overlay + ") - no-op, edge-to-edge handled by initialize()");
     }
 
     /**
@@ -426,7 +430,9 @@ public class SystemBarsManager {
                 setupLegacySystemUI();
                 if (currentStatusBarColor != null) {
                     try {
-                        window.setStatusBarColor(Color.parseColor(currentStatusBarColor));
+                        int parsedStatusColor = Color.parseColor(currentStatusBarColor);
+                        window.setStatusBarColor(parsedStatusColor);
+                        window.setBackgroundDrawable(new ColorDrawable(parsedStatusColor));
                     } catch (IllegalArgumentException ignored) {}
                 }
                 if (currentNavBarColor != null) {

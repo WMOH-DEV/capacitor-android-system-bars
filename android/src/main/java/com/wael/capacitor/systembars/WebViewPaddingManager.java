@@ -10,8 +10,8 @@ import android.webkit.WebView;
  * WebViewPaddingManager - Manages WebView padding for Android < 35 ONLY.
  *
  * On Android < 35: Top padding pushes content below the status bar overlay.
- * On Android 35+: Capacitor's adjustMarginsForEdgeToEdge="auto" handles
- *   spacing via WebView margins. No padding needed from us.
+ * On Android 35+: the plugin's base inset listener applies WebView margins,
+ *   so no padding is needed here.
  */
 public class WebViewPaddingManager {
 
@@ -56,12 +56,12 @@ public class WebViewPaddingManager {
 
     /**
      * Apply padding to WebView.
-     * Android 35+: No-op (Capacitor handles margins).
+     * Android 35+: No-op (base inset listener handles margins).
      * Android < 35: Top-only padding for status bar overlay.
      */
     public void applyPadding() {
         if (Build.VERSION.SDK_INT >= 35) {
-            Log.d(TAG, "Android 35+: Skipping padding (Capacitor margins handle spacing)");
+            Log.d(TAG, "Android 35+: Skipping padding (base inset listener handles margins)");
             return;
         }
 
@@ -75,11 +75,11 @@ public class WebViewPaddingManager {
 
     /**
      * Remove padding (for fullscreen mode).
-     * Android 35+: No-op (Capacitor handles margins).
+     * Android 35+: No-op (base inset listener handles margins).
      */
     public void removePadding() {
         if (Build.VERSION.SDK_INT >= 35) {
-            Log.d(TAG, "Android 35+: Skipping removePadding (Capacitor margins handle spacing)");
+            Log.d(TAG, "Android 35+: Skipping removePadding (base inset listener handles margins)");
             return;
         }
 

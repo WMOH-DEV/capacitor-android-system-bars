@@ -23,15 +23,14 @@ public class SystemBarsManagerPlugin extends Plugin {
         fullscreenManager = new FullscreenManager(getActivity(), systemBarsManager, paddingManager);
         lifecycleHandler = new LifecycleHandler(this);
 
-        // Pass WebView reference to FullscreenManager for Android 35+ margin control
         fullscreenManager.setWebView(bridge.getWebView());
-
-        // Initialize system bars (edge-to-edge on 35+, legacy on < 35)
         systemBarsManager.initialize();
 
-        // Apply WebView padding for Android < 35 only
-        // (Android 35+: Capacitor's adjustMarginsForEdgeToEdge="auto" handles spacing)
-        paddingManager.applyPadding();
+        if (Build.VERSION.SDK_INT >= 35) {
+            fullscreenManager.installBaseInsetsListener();
+        } else {
+            paddingManager.applyPadding();
+        }
     }
 
     @PluginMethod
