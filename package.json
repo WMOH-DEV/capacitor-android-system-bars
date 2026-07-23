@@ -1,6 +1,6 @@
 {
   "name": "capacitor-android-system-bars",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Unified plugin to handle Android system bars (status bar & navigation bar), webview sizing, edge-to-edge display, and fullscreen mode with full compatibility for Android API 21-36+",
   "main": "dist/plugin.cjs.js",
   "module": "dist/esm/index.js",

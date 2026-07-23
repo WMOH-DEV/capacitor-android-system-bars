@@ -73,7 +73,7 @@ public class FullscreenManager {
                 if (Build.VERSION.SDK_INT >= 35 && webView != null) {
                     installFullscreenInsetsListener();
                 } else if (Build.VERSION.SDK_INT < 35) {
-                    // Android 30-34: Remove WebView padding manually
+                    WindowCompat.setDecorFitsSystemWindows(window, false);
                     paddingManager.removePadding();
                 }
 
@@ -191,7 +191,7 @@ public class FullscreenManager {
                     installBaseInsetsListener();
                     systemBarsManager.reapplySystemUI();
                 } else {
-                    // Android 30-34: Re-apply padding
+                    WindowCompat.setDecorFitsSystemWindows(window, true);
                     decorView.post(() -> paddingManager.applyPadding());
                 }
 
@@ -283,6 +283,9 @@ public class FullscreenManager {
                 installBaseInsetsListener();
                 systemBarsManager.reapplySystemUI();
             } else {
+                if (Build.VERSION.SDK_INT >= 30) {
+                    WindowCompat.setDecorFitsSystemWindows(window, true);
+                }
                 paddingManager.applyPadding();
             }
 
@@ -310,11 +313,10 @@ public class FullscreenManager {
                     WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window,
                             decorView);
 
-                    // Re-install fullscreen listener on 35+
                     if (Build.VERSION.SDK_INT >= 35 && webView != null) {
                         installFullscreenInsetsListener();
                     } else if (Build.VERSION.SDK_INT < 35) {
-                        // Android 30-34: Remove WebView padding
+                        WindowCompat.setDecorFitsSystemWindows(window, false);
                         paddingManager.removePadding();
                     }
 

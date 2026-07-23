@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.0] - 2026-07-23
+
+### Fixed
+
+- **Fullscreen was not fullscreen on API 30-34**: `enterFullscreen()` hid the system bars but the window kept its fitted decor, so the navigation bar region stayed reserved and the app could not draw into it. `setDecorFitsSystemWindows(false)` was only reachable from `initializeEdgeToEdge()`, gated behind `SDK_INT >= 35`, and `removePadding()` clears the WebView's padding rather than the DecorView's, so nothing compensated.
+  - Edge-to-edge is now declared on fullscreen enter and the fitted decor restored on exit, across `enterFullscreen`, `exitFullscreen`, `forceExit` and `reapplyFullscreenIfActive`.
+  - Measured on a Pixel 7 (API 33): content view was `1080x2201` inside a `1080x2264` window; it now fills `1080x2400`, and exit restores `2201`.
+  - The `SDK_INT < 30` legacy path already handled this via `SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | LAYOUT_HIDE_NAVIGATION` and is untouched. API 27 and API 36 verified byte-identical before and after.
+
+### Behavior change (API 30-34 only)
+
+- Web content now extends into the navigation bar region while fullscreen is active. Fixed-position bottom UI will sit at the true screen edge rather than above the reserved strip. This is the documented `enterFullscreen()` contract; prior versions did not deliver it. Minor rather than patch release for this reason.
+- `exitFullscreen()` now sets `setDecorFitsSystemWindows(window, true)` on API 30-34. Apps that declared edge-to-edge themselves on those API levels previously kept that setting across a fullscreen cycle and will no longer. Android exposes no getter for this flag, so the prior value cannot be snapshotted and restored. This combination contradicts the documented API 30-33 model ("Manual webview padding") and is not expected in practice.
+
 ## [1.3.2] - 2026-06-29
 
 ### Fixed
