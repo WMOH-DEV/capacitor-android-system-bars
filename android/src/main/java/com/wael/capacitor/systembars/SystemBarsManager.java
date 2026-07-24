@@ -99,6 +99,9 @@ public class SystemBarsManager {
         insetsController.setSystemBarsBehavior(
                 WindowInsetsControllerCompat.BEHAVIOR_DEFAULT);
 
+        window.setNavigationBarContrastEnforced(false);
+        window.setStatusBarContrastEnforced(false);
+
         setupBarBackgroundViews();
 
         Log.d(TAG, "Edge-to-edge initialized.");

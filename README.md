@@ -714,6 +714,11 @@ show() => Promise<void>
    - Old methods like `setStyle()`, `hide()`, `show()` still work but show deprecation warnings
    - Migrate to new unified API (`setSystemBarsStyle()`, `hideStatusBar()`, `showStatusBar()`) for better clarity
 
+7. **Navigation/status bar shows a translucent grey scrim in light theme (Android 15+, 3-button nav)**
+   - Android 15+ enforces a system contrast scrim behind the navigation and status bars (most visible with 3-button navigation), which tints the plugin's custom bar background so it no longer matches your theme
+   - The plugin disables this contrast enforcement during edge-to-edge initialization, so your custom status/navigation bar colors render true to the theme
+   - Applied automatically on API 35+ -- no configuration needed
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
