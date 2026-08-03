@@ -42,12 +42,10 @@ public class SystemBarsManager {
     // Store pending bar colors/styles for re-application after lifecycle events
     private String currentStatusBarColor = null;
     private String currentNavBarColor = null;
-    private String currentStatusBarStyle = "DEFAULT";
-    private String currentNavBarStyle = "DEFAULT";
+    private String currentStatusBarStyle = null;
+    private String currentNavBarStyle = null;
 
     // Android 35+: per-bar background colors (shown via Views behind transparent bars)
-    private String currentStatusBarBgColor = null;
-    private String currentNavBarBgColor = null;
     private View statusBarBgView;
     private View navBarBgView;
 
@@ -176,7 +174,6 @@ public class SystemBarsManager {
      */
     private void setStatusBarBgColor(String color) {
         if (color == null || color.isEmpty()) return;
-        currentStatusBarBgColor = color;
         if (statusBarBgView == null) return;
         try {
             statusBarBgView.setBackgroundColor(Color.parseColor(color));
@@ -191,13 +188,25 @@ public class SystemBarsManager {
      */
     private void setNavBarBgColor(String color) {
         if (color == null || color.isEmpty()) return;
-        currentNavBarBgColor = color;
         if (navBarBgView == null) return;
         try {
             navBarBgView.setBackgroundColor(Color.parseColor(color));
             Log.d(TAG, "Navigation bar background set to: " + color);
         } catch (IllegalArgumentException e) {
             Log.w(TAG, "Invalid navigation bar background color: " + color);
+        }
+    }
+
+    /**
+     * Paint the window background so a relayout (rotation, resize) never exposes the theme's
+     * static windowBackground underneath the WebView.
+     */
+    private void setWindowBackground(String color) {
+        if (color == null || color.isEmpty()) return;
+        try {
+            window.setBackgroundDrawable(new ColorDrawable(Color.parseColor(color)));
+        } catch (IllegalArgumentException e) {
+            Log.w(TAG, "Invalid window background color: " + color);
         }
     }
 
@@ -215,6 +224,7 @@ public class SystemBarsManager {
 
                 if (color != null && !color.isEmpty()) {
                     setStatusBarBgColor(color);
+                    setWindowBackground(color);
                 }
 
             } else if (Build.VERSION.SDK_INT >= 30) {
@@ -412,37 +422,15 @@ public class SystemBarsManager {
         activity.runOnUiThread(() -> {
             if (Build.VERSION.SDK_INT >= 35) {
                 initializeEdgeToEdge();
-
-                // Re-apply stored per-bar background colors
-                if (currentStatusBarBgColor != null) {
-                    setStatusBarBgColor(currentStatusBarBgColor);
-                }
-                if (currentNavBarBgColor != null) {
-                    setNavBarBgColor(currentNavBarBgColor);
-                }
-                // Re-apply icon styles
-                if (currentStatusBarStyle != null) {
-                    boolean lightStatusIcons = currentStatusBarStyle.equals("DARK");
-                    insetsController.setAppearanceLightStatusBars(!lightStatusIcons);
-                }
-                if (currentNavBarStyle != null) {
-                    boolean lightNavIcons = currentNavBarStyle.equals("DARK");
-                    insetsController.setAppearanceLightNavigationBars(!lightNavIcons);
-                }
             } else {
                 setupLegacySystemUI();
-                if (currentStatusBarColor != null) {
-                    try {
-                        int parsedStatusColor = Color.parseColor(currentStatusBarColor);
-                        window.setStatusBarColor(parsedStatusColor);
-                        window.setBackgroundDrawable(new ColorDrawable(parsedStatusColor));
-                    } catch (IllegalArgumentException ignored) {}
-                }
-                if (currentNavBarColor != null) {
-                    try {
-                        window.setNavigationBarColor(Color.parseColor(currentNavBarColor));
-                    } catch (IllegalArgumentException ignored) {}
-                }
+            }
+
+            if (currentStatusBarStyle != null) {
+                setStatusBarStyle(currentStatusBarStyle, currentStatusBarColor);
+            }
+            if (currentNavBarStyle != null) {
+                setNavigationBarStyle(currentNavBarStyle, currentNavBarColor);
             }
         });
     }
