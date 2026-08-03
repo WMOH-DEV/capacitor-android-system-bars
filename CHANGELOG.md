@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.2] - 2026-08-03
+
+### Fixed
+
+- **System bar icon style was lost on every configuration change**: Capacitor 8's built-in `SystemBars` plugin re-applies its configured `style` from `handleOnConfigurationChanged` (`SystemBars.java:88-93`), overwriting the appearance this plugin had set. Any rotation, night-mode toggle, locale, density or screen-layout change reverted the icons to the Capacitor config value. In a light theme that left white icons on a light status bar — invisible. `insetsHandling: "disable"` does not prevent this; that option only skips Capacitor's insets listener.
+  - The plugin now handles `handleOnConfigurationChanged` and re-applies its own stored bar state, deferred with `View.post()` so it lands after every plugin's synchronous handler regardless of registration order.
+  - Fullscreen is preserved: when fullscreen is active, `reapplyFullscreenIfActive()` runs instead of the normal-state path.
+  - Measured on a Pixel 9 Pro (API 36) with a white status bar: before, a portrait→landscape rotation dropped the dark-icon pixel count in the status bar strip to 0; after, the icons survive (21 dark pixels on the icon row) and the background stays `#ffffff`. Rotating while fullscreen keeps content at the full `2856x1280` with both bars hidden.
+
+- **`reapplySystemUI()` never restored icon appearance below API 35**: the `SDK_INT >= 35` branch re-applied `setAppearanceLightStatusBars` / `setAppearanceLightNavigationBars`, the `< 35` branch only re-applied bar colors. Any re-apply on API 21-34 — `onResume` from background as well as the new configuration-change path — left the icon appearance at whatever last wrote it. Verified on a Pixel 7 (API 33) with a white status bar: portrait showed dark icons, landscape showed none.
+  - `reapplySystemUI()` now delegates to `setStatusBarStyle()` / `setNavigationBarStyle()`, which already carry the complete per-API-level logic (appearance + color for `>= 35`, `>= 30`, `>= 26` and `>= 23`). The duplicated color-only restore is gone.
+  - After: API 33 landscape shows the dark icons on the white bar; API 36 unchanged.
+
+- **Android 35+ never painted the window background**, so a relayout exposed the host theme's static `android:windowBackground` underneath the WebView. Where that resource is a fixed dark color, every rotation showed a dark band across the not-yet-repainted area — even in a light theme. The `< 35` branches of `setStatusBarStyle()` already called `window.setBackgroundDrawable()`; the `>= 35` branch only tinted the bar background *views*. It now paints the window as well, through a shared `setWindowBackground()`.
+  - Identified on a Samsung SM-T500 (API 31) by setting the window background to `#ff00ff` and rotating by hand: the exposed band rendered magenta, pinning the window background as the source.
+  - A separate, briefer dark frame precedes it. That one is Android's own screen-rotation animation and is not addressable from here: `WindowManager.LayoutParams.rotationAnimation` is documented to take effect only for windows holding `FLAG_FULLSCREEN`, with every other case falling back to `ROTATION_ANIMATION_ROTATE`.
+
+### Changed
+
+- `currentStatusBarStyle` / `currentNavBarStyle` now start as `null` instead of `"DEFAULT"`. The existing null guards in `reapplySystemUI()` were unreachable, so re-applying on an app that never called `setStatusBarStyle`/`setNavigationBarStyle` forced `setAppearanceLightStatusBars(true)` (dark icons) regardless of the app's actual theme. Re-application is now skipped until a style has been set explicitly. Affects `onResume` as well as the new configuration-change path.
+- Removed `currentStatusBarBgColor` / `currentNavBarBgColor`. They duplicated `currentStatusBarColor` / `currentNavBarColor` (both are written from the same argument in `setStatusBarStyle`/`setNavigationBarStyle`) and became write-only once `reapplySystemUI()` started delegating.
+
+## [2.1.1]
+
+Not recorded at release time.
+
 ## [2.1.0] - 2026-07-23
 
 ### Fixed
