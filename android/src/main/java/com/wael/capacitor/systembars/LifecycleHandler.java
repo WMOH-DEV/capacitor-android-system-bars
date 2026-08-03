@@ -26,25 +26,34 @@ public class LifecycleHandler {
     }
 
     public void onResume() {
-        if (isAppInBackground) {
-            isAppInBackground = false;
+        if (!isAppInBackground) return;
 
-            FullscreenManager fullscreenManager = plugin.getFullscreenManager();
+        isAppInBackground = false;
+        reapplySystemUIState();
 
-            if (fullscreenManager.isFullscreenActive()) {
-                fullscreenManager.reapplyFullscreenIfActive();
-            } else {
-                // Re-apply system UI state (colors, icon styles)
-                SystemBarsManager systemBarsManager = plugin.getSystemBarsManager();
-                systemBarsManager.reapplySystemUI();
+        Log.d(TAG, "Resumed from background, re-applied system UI state");
+    }
 
-                // Re-apply padding only for Android < 35
-                if (Build.VERSION.SDK_INT < 35) {
-                    plugin.getPaddingManager().applyPadding();
-                }
-            }
+    // post() defers past Capacitor's SystemBars plugin, which re-applies its configured style synchronously in handleOnConfigurationChanged.
+    public void onConfigurationChanged() {
+        plugin.getBridge().getWebView().post(() -> {
+            reapplySystemUIState();
+            Log.d(TAG, "Configuration changed, re-applied system UI state");
+        });
+    }
 
-            Log.d(TAG, "Resumed from background, re-applied system UI state");
+    private void reapplySystemUIState() {
+        FullscreenManager fullscreenManager = plugin.getFullscreenManager();
+
+        if (fullscreenManager.isFullscreenActive()) {
+            fullscreenManager.reapplyFullscreenIfActive();
+            return;
+        }
+
+        plugin.getSystemBarsManager().reapplySystemUI();
+
+        if (Build.VERSION.SDK_INT < 35) {
+            plugin.getPaddingManager().applyPadding();
         }
     }
 }

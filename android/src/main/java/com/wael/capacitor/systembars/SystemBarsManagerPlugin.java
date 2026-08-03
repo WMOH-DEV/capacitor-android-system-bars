@@ -1,5 +1,6 @@
 package com.wael.capacitor.systembars;
 
+import android.content.res.Configuration;
 import android.os.Build;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -388,6 +389,14 @@ public class SystemBarsManagerPlugin extends Plugin {
         super.handleOnResume();
         if (lifecycleHandler != null) {
             lifecycleHandler.onResume();
+        }
+    }
+
+    @Override
+    protected void handleOnConfigurationChanged(Configuration newConfig) {
+        super.handleOnConfigurationChanged(newConfig);
+        if (lifecycleHandler != null) {
+            lifecycleHandler.onConfigurationChanged();
         }
     }
 }
